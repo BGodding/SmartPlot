@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>SmartPlot</DisplayName>
+    <Description>Installs all necessary files and start menu shortcuts.</Description>
+    <Version>2.01.002</Version>
+    <ReleaseDate>2016-04-13</ReleaseDate>
+    <Licenses>
+        <License name="General Public License Agreement" file="GPL.txt" />
+    </Licenses>
+    <Default>script</Default>
+    <Script>installscript.qs</Script>
+</Package>
