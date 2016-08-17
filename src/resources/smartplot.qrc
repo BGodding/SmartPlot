@@ -32,14 +32,14 @@
         <file>smartplot.ico</file>
     </qresource>
     <qresource prefix="/translations">
-        <file>translation_de.qm</file>
-        <file>translation_es.qm</file>
-        <file>translation_fr.qm</file>
-        <file>translation_it.qm</file>
-        <file>translation_ja.qm</file>
-        <file>translation_ko.qm</file>
-        <file>translation_pt.qm</file>
-        <file>translation_zh.qm</file>
+        <file>qt_de.qm</file>
+        <file>qt_es.qm</file>
+        <file>qt_fr.qm</file>
+        <file>qt_it.qm</file>
+        <file>qt_ja.qm</file>
+        <file>qt_ko.qm</file>
+        <file>qt_pt.qm</file>
+        <file>qt_zh_CN.qm</file>
     </qresource>
     <qresource prefix="/qttranslations">
         <file>qt_de.qm</file>

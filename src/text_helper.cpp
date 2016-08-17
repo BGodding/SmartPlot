@@ -210,10 +210,11 @@ void text_helper::insertDataBreak(double dateTime, QVector<QVector<double> > &se
             {
                 seriesData[mData.value("Data Storage").toInt()].append(std::numeric_limits<double>::quiet_NaN());
             }
-            else if(mData.value("Value Data Type") == "Event")
-            {
-                eventData[mData.value("Data Storage").toInt()].append("");
-            }
         }
+    }
+    if( !eventData.isEmpty() )
+    {
+        QVector<QString> spacerVector(eventData.first().size());
+        eventData.append(spacerVector);
     }
 }

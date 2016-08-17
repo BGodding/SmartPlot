@@ -279,6 +279,7 @@ void plot_interface::selected_remove()
             activePlot->removeItem(activePlot->selectedItems().first());
         }
 
+        selectionChanged(activePlot);
         activePlot->replot();
     }
 }

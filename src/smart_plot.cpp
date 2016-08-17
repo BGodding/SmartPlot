@@ -12,7 +12,7 @@ smart_plot::smart_plot(QWidget *parent) :
     QDesktopServices::setUrlHandler("file", myHandler, "files");
     connect(myHandler, SIGNAL(openFile(const QString&)), this, SLOT( iosOpen(const QString &)));
 
-    setWindowTitle(tr("Smartplot Ver 2.01.002"));
+    setWindowTitle(tr("Smartplot Ver 2.01.005"));
 
     QCoreApplication::setOrganizationName("bgodding");
     QCoreApplication::setApplicationName("smartplot");

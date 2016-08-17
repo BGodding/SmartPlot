@@ -47,7 +47,7 @@ void generateUniqueList(QVector<QVector<QString> > *data, int column, QList<QStr
     int row;
     list.clear();
 
-    for(row = 0; row < data->first().size(); row++)
+    for(row = 0; row < data->size(); row++)
     {
         if(list.indexOf(data->value(row).value(column)) == -1)
             list.append(data->value(row).value(column));

@@ -226,7 +226,7 @@ void csv_handler::openDelimitedFile(QString fileName)
 
         QProgressDialog progress(tr("Importing Data"), tr("Cancel"), 0, file.size(), NULL, (Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint));
         progress.setWindowModality(Qt::WindowModal);
-        progress.show();
+        progress.setMinimumDuration(0);
 
         //we need to determine the delimiter
         delimiter = th.autoDetectDelimiter(textStream);

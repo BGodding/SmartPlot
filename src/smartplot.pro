@@ -63,11 +63,11 @@ RESOURCES += \
     resources/smartplot.qrc
 
 TRANSLATIONS += \
-    resources/translation_de.ts \
-    resources/translation_es.ts \
-    resources/translation_fr.ts \
-    resources/translation_it.ts \
-    resources/translation_ja.ts \
-    resources/translation_ko.ts \
-    resources/translation_pt.ts \
-    resources/translation_zh.ts
+    resources/qt_de.ts \
+    resources/qt_es.ts \
+    resources/qt_fr.ts \
+    resources/qt_it.ts \
+    resources/qt_ja.ts \
+    resources/qt_ko.ts \
+    resources/qt_pt.ts \
+    resources/qt_zh.ts
