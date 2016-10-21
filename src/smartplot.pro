@@ -11,7 +11,7 @@ QT       += network
 TARGET = smartplot
 
 #uncomment out the lines below to build with mobile/touch support
-#DEFINES += MOBILE
+DEFINES += MOBILE
 QMAKE_INFO_PLIST = Info.plist
 OTHER_FILES += Info.plist
 
