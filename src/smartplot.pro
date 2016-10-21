@@ -30,7 +30,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 SOURCES += main.cpp \
     smart_plot.cpp \
-    qcompressor.cpp \
+    #qcompressor.cpp \
     json_helper.cpp \
     text_helper.cpp \
     utility.cpp \
@@ -44,7 +44,7 @@ SOURCES += main.cpp \
 
 HEADERS += \
     smart_plot.h \
-    qcompressor.h \
+    #qcompressor.h \
     json_helper.h \
     text_helper.h \
     utility.h \
