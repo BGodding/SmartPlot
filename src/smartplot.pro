@@ -7,7 +7,7 @@
 QT       += core gui qml
 #Needed for influx
 QT       += network
-
+QT       += sql
 TARGET = smartplot
 
 #uncomment out the lines below to build with mobile/touch support
@@ -35,6 +35,7 @@ SOURCES += main.cpp \
     text_helper.cpp \
     utility.cpp \
     datahandlers/csv_handler.cpp \
+    datahandlers/cloc_handler.cpp \
     datahandlers/influxdb_handler.cpp \
     tabs/plot/axis_handler.cpp \
     tabs/plot/plot_analytics.cpp \
@@ -50,6 +51,7 @@ HEADERS += \
     utility.h \
     ios/iOSFileOpener.h \
     datahandlers/csv_handler.h \
+    datahandlers/cloc_handler.h \
     datahandlers/influxdb_handler.h \
     tabs/plot/axis_handler.h \
     tabs/plot/plot_analytics.h \

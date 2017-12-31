@@ -4,6 +4,7 @@
 #include <QObject>
 
 #include "tabs/plot/qcustomplot.h"
+#include "tabs/plot/axis_handler.h"
 
 class plot_handler : public QObject
 {
@@ -14,7 +15,7 @@ public:
 
     QCPGraph *addPlotLine(QVector<QVector<double> > &dataVector, QVariantMap metaData);
     QCPGraph *addPlotLine(QVector<double> &key, QVector<double> &value, QString name, QCustomPlot *plot);
-    QCPGraph *addPlotLine(QCPDataMap *dataMap, QString name, QCustomPlot *plot);
+    QCPGraph *addPlotLine(QCPGraphDataContainer *dataMap, QString name, QCustomPlot *plot);
 
     void plotConvert( QCPGraph *graph, QString functionString );
 
@@ -24,6 +25,8 @@ private:
     void generatePenColor(QPen *pen);
 
     QList < QColor> penColors;
+
+    axis_handler ah;
 };
 
 #endif // PLOT_HANDLER

@@ -5,6 +5,7 @@
 
 //Data Handlers: Add header files here
 #include "datahandlers/csv_handler.h"
+#include "datahandlers/cloc_handler.h"
 #include "datahandlers/influxdb_handler.h"
 
 #include "ios/iOSFileOpener.h"
@@ -58,7 +59,7 @@ private slots:
     void contextMenuRequest(QPoint pos);
 
     //Called by qcustomplot slot to rename the title
-    void titleDoubleClick(QMouseEvent *event, QCPPlotTitle *title);
+    void titleDoubleClick(QMouseEvent* event);
     //Called by qcustomplot slot to rename the selected axis
     void axisDoubleClick(QCPAxis* axis, QCPAxis::SelectablePart part);
     //Called by qcustomplot slot to rename plot in legend
@@ -80,6 +81,7 @@ private:
     plot_interface plotInterface;
     axis_handler axisHandler;
     csv_handler csvHandler;
+    cloc_handler clocHandler;
     influxdb_handler influxdbHandler;
 
     QMenu *contextMenu;

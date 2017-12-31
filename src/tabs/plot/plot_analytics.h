@@ -55,10 +55,9 @@ public:
 //    void ultraAnalyze(QDir targetDir, QString nameMustContain, QStringList targetColumnName, QVector<plotStats> *stats);
 //    void ultraAnalyze(QDir targetDir, QRegExp nameRegExp, QString targetColumnName);
     //Returns the first point before the target point
-    bool nearestByKeyValue(QCPData target, QCPGraph *reference, QMap<double, QCPData>::const_iterator *iterator);
 private:
     bool handlePoints(double targetValue, double referenceValue, double keyDelta, plotStats *stats);
-    bool handlePoints(QCPData target, QCPData reference, plotStats *stats);
+    bool handlePoints(QCPGraphData target, QCPGraphData reference, plotStats *stats);
 
     //Target will be modifed
     void clearUnwantedPoints(QCPGraph *target, QCPGraph *enableReference, QCPRange valueEnableRange);
