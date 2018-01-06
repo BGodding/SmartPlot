@@ -11,7 +11,6 @@
 #include "text_helper.h"
 #include "tabs/plot/plot_handler.h"
 #include "tabs/plot/axis_handler.h"
-#include "tabs/plot/plot_interface.h"
 
 class cloc_handler : public QObject
 {
@@ -62,7 +61,6 @@ private:
     text_helper th;
     axis_handler ah;
     plot_handler ph;
-    plot_interface pi;
 
     QSqlDatabase clocData;
 };

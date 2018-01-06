@@ -88,8 +88,12 @@ bool cloc_handler::eventFilter(QObject* object,QEvent* event)
                 foreach(QAction* action, objectMenu->actions())
                 {
                     QVariantMap actionData = action->data().toMap();
-
-                    action->setIconVisibleInMenu(!actionData.value("Active").toBool());
+                    for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
+                    {
+                        QVariantMap mData = metaData.value(metaDataIndex);
+                        if( (mData.value("Key Value") == actionData.value("Key Value")) && (mData.value("Key Field") == actionData.value("Key Field")) )
+                            action->setIconVisibleInMenu(mData.value("Active").toBool());
+                    }
                 }
                 objectMenu->update();
 
@@ -106,7 +110,7 @@ void cloc_handler::menuDataImport()
     QSettings settings;
     QVariantMap modifier;
 
-    QString fileName = QFileDialog::getOpenFileName (NULL, tr("Open Delimited Text file"),
+    QString fileName = QFileDialog::getOpenFileName (NULL, tr("Open CLOC results file"),
                                                      settings.value("CLOC Handler Source Directory").toString(), "TEXT (*.txt);;ANY (*.*)");
     if(!fileName.isEmpty())
     {
@@ -126,6 +130,32 @@ void cloc_handler::dataPlot()
         QVariantMap selectionData = contextAction->data().toMap();
         QCustomPlot* customPlot = (QCustomPlot*)selectionData["Active Plot"].value<void *>();
 
+        for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
+        {
+            QVariantMap mData = metaData.value(metaDataIndex);
+
+            if(selectionData.value("Key Value") == "ALL")
+            {
+                mData["Active"] = true;
+            }
+            else if (selectionData.value("Key Value") == "NONE")
+            {
+                mData["Active"] = false;
+            }
+            else if( mData.value("Key Value") == selectionData.value("Key Value") )
+            {
+                if(mData.value("Active") == true)
+                {
+                    mData["Active"] = false;
+                }
+                else
+                {
+                    mData["Active"] = true;
+                }
+            }
+            metaData[metaDataIndex] = mData;
+        }
+
         QSqlQuery query(clocData);
         bool ok;
         int numberOfVersions = 0;
@@ -138,14 +168,6 @@ void cloc_handler::dataPlot()
         query.exec("SELECT MAX(id) FROM snapshots");
         query.next();
         numberOfVersions = query.value(0).toInt();
-        qDebug() << numberOfVersions;
-
-        //TODO: Get number of Languages
-//        query.exec("SELECT DISTINCT(language) FROM results");
-//        while(query.next())
-//        {
-//            qDebug() << query.value(0).toString();
-//        }
 
         //Left justify the legend as data will probably increase left to right
         customPlot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignLeft|Qt::AlignTop);
@@ -164,8 +186,6 @@ void cloc_handler::dataPlot()
             if( (prevDateTime != 0) && (qAbs(prevDateTime - dateTime) < resolution) && (qAbs(prevDateTime - dateTime) >= 86400) )
                 resolution = qAbs(prevDateTime - dateTime);
 
-            //qDebug() << prevDateTime << dateTime << resolution << qAbs(prevDateTime - dateTime);
-
             prevDateTime = dateTime;
         }
 
@@ -173,7 +193,7 @@ void cloc_handler::dataPlot()
         if(resolution%86400)
             resolution += 86400 - (resolution%86400);
 
-        for (int version = (numberOfVersions-1) ; version >= 0 ; version-- )
+        for (int version = numberOfVersions ; version > 0 ; version-- )
         {
             //Get date of version
             query.exec(QString("SELECT target_timestamp FROM snapshots WHERE id = %1").arg(version));
@@ -185,7 +205,6 @@ void cloc_handler::dataPlot()
             {
                 while( (dateTime - dates.last()) > (resolution*1.1) )
                 {
-                    qDebug() << resolution << dateTime <<  dateTime - dates.last() << dates.last();
                     dates.append(dates.last() + resolution );
                     sameLines.append(sameLines.last() + modifiedLines.last() + addedLines.last());
 
@@ -201,7 +220,6 @@ void cloc_handler::dataPlot()
             modifiedLines.append(0);
             addedLines.append(0);
             removedLines.append(0);
-            //qDebug() << dates;
 
             for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
             {
@@ -210,55 +228,51 @@ void cloc_handler::dataPlot()
                 {
                     query.exec(QString("SELECT nCode FROM results WHERE snapshot_id=%1 AND type='count' AND language='%2'").arg(version).arg(keyFieldMetaData.value("Key Field").toString()));
                     query.next();
-                    qDebug() << query.lastQuery() << query.lastError() << query.value(0).toInt(&ok);
-                    sameLines.last() = sameLines.last() + query.value(0).toInt(&ok);
+                    if (query.isValid())
+                        sameLines.last() = sameLines.last() + query.value(0).toInt(&ok);
 
                     query.exec(QString("SELECT nCode FROM results WHERE snapshot_id=%1 AND type='modified' AND language='%2'").arg(version).arg(keyFieldMetaData.value("Key Field").toString()));
                     query.next();
-                    qDebug() << query.lastQuery() << query.lastError() << query.value(0).toInt(&ok);
-                    modifiedLines.last() = modifiedLines.last() + query.value(0).toInt(&ok);
+                    if (query.isValid())
+                        modifiedLines.last() = modifiedLines.last() + query.value(0).toInt(&ok);
 
                     query.exec(QString("SELECT nCode FROM results WHERE snapshot_id=%1 AND type='removed' AND language='%2'").arg(version).arg(keyFieldMetaData.value("Key Field").toString()));
                     query.next();
-                    qDebug() << query.lastQuery() << query.lastError() << query.value(0).toInt(&ok);
-                    removedLines.last() = removedLines.last() - query.value(0).toInt(&ok);
+                    if (query.isValid())
+                        removedLines.last() = removedLines.last() - query.value(0).toInt(&ok);
 
                     query.exec(QString("SELECT nCode FROM results WHERE snapshot_id=%1 AND type='added' AND language='%2'").arg(version).arg(keyFieldMetaData.value("Key Field").toString()));
                     query.next();
-                    qDebug() << query.lastQuery() << query.lastError() << query.value(0).toInt(&ok);
-                    addedLines.last() = addedLines.last() + query.value(0).toInt(&ok);
+                    if (query.isValid())
+                        addedLines.last() = addedLines.last() + query.value(0).toInt(&ok);
                 }
             }
         }
 
-        pi.removeAll();
-        QPen graphPen;
+        customPlot->clearGraphs();
+        customPlot->clearPlottables();
+        customPlot->clearItems();
 
         QCPBars *same = new QCPBars(customPlot->xAxis, customPlot->yAxis);
         QCPBars *modified = new QCPBars(customPlot->xAxis, customPlot->yAxis);
         QCPBars *added = new QCPBars(customPlot->xAxis, customPlot->yAxis);
         QCPBars *removed = new QCPBars(customPlot->xAxis, customPlot->yAxis);
 
-        //customPlot->addPlottable(removed);
-        //QCPGraph *removed = plot->addGraph();
         removed->setName(tr("Removed"));
         removed->setData(dates, removedLines);
         removed->setBrush(Qt::darkGray);
         removed->setWidth(resolution);
 
-        //customPlot->addPlottable(same);
         same->setName(tr("Same"));
         same->setData(dates, sameLines);
         same->setBrush(Qt::green);
         same->setWidth(resolution);
 
-        //customPlot->addPlottable(modified);
         modified->setName(tr("Modified"));
         modified->setData(dates, modifiedLines);
         modified->setBrush(Qt::yellow);
         modified->setWidth(resolution);
 
-        //customPlot->addPlottable(added);
         added->setName(tr("Added"));
         added->setData(dates, addedLines);
         added->setBrush(Qt::red);
@@ -267,13 +281,17 @@ void cloc_handler::dataPlot()
         //Stack Bars
         added->moveAbove(modified);
 
-        //customPlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
-        //customPlot->xAxis->setDateTimeFormat("MMM yyyy");
-        customPlot->plottable()->rescaleAxes();
-        customPlot->replot();
-        updateAxis(customPlot);
+//        customPlot->xAxis->setDateTimeFormat("MMM yyyy");
+        QSharedPointer<QCPAxisTickerDateTime> ticker(new QCPAxisTickerDateTime);
+        customPlot->xAxis->setTicker(ticker);
 
-        ah.updateGraphAxes(customPlot);
+        customPlot->plottable()->rescaleAxes();
+        for(int plotIndex = 0; plotIndex < customPlot->plottableCount(); plotIndex++)
+        {
+            customPlot->plottable(plotIndex)->rescaleAxes(true);
+        }
+        customPlot->replot();
+        //ah.updateGraphAxes(customPlot);
     }
 }
 
@@ -284,7 +302,6 @@ void cloc_handler::dataExport(QVariantMap modifier)
 
 void cloc_handler::openDelimitedFile(QString fileName)
 {
-    //This will now be imporint a file with SQL commands, and executing them as is..
     QFile file(fileName);
     QString line = QString();
 
@@ -308,29 +325,21 @@ void cloc_handler::openDelimitedFile(QString fileName)
             if (!line.isEmpty() && !line.startsWith(QChar::Null))
             {
                 query.exec(line);
-                query.next();
-                qDebug() << line << query.lastError();
             }
         }
         file.close();
-
-        query.exec("SELECT * FROM snapshots");
-        while(query.next())
-        {
-            qDebug() << query.value(0);
-        }
 
         //TODO: Treat Languages like ("Unique Event Meta Data")?
         query.exec("SELECT DISTINCT(language) FROM results");
         while(query.next())
         {
-            qDebug() << query.value(0).toString();
             if (query.value(0).toString() == "SUM")
                 continue;
 
             QVariantMap variantMap;
             variantMap["Key Field"] = query.value(0).toString();
-            variantMap["Active"] = true;
+            variantMap["Key Value"] = query.value(0).toString();
+            variantMap["Active"] = false;
             metaData.append(variantMap);
         }
     }
