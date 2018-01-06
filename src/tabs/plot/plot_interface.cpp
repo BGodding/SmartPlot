@@ -56,7 +56,7 @@ void plot_interface::selectionChanged(QCustomPlot *customPlot)
         if (item->selected() || plottable->selected())
         {
             item->setSelected(true);
-            plottable->setSelected(true);
+            plottable->setSelection(QCPDataSelection(QCPDataRange(0, 1)));
         }
 
         if( (!item->selected() && !plottable->selected()) &&
@@ -180,8 +180,9 @@ void plot_interface::addToContextMenu(QMenu *menu, QCustomPlot* plot)
             QMenu *convertPlotMenu = menu->addMenu (QIcon(":/graphics/periodic.png"), tr("Convert to periodic") );
             //selectionData.clear();
             QSettings settings;
-            QCPAxis::LabelType currentLabelType = static_cast<QCPAxis::LabelType>(settings.value("X Axis Tick Label Format", QCPAxis::ltDateTime).toInt());
-            if(currentLabelType==QCPAxis::ltDateTime)
+
+            plot_interface::tickerType currentLabelType = static_cast<plot_interface::tickerType>(settings.value("X Axis Tick Label Format", plot_interface::dateTime).toInt());
+            if(currentLabelType==plot_interface::dateTime)
             {
                 metaDataMap["Interval Value"] = 1;
 
@@ -324,7 +325,7 @@ void plot_interface::selected_pickNewLineColor()
         for(int plottable = 0 ; plottable < activePlot->selectedPlottables().size() ; plottable++)
         {
             activePlot->selectedPlottables().value(plottable)->setPen(graphPen);
-            activePlot->selectedPlottables().value(plottable)->setSelectedPen(graphPen);
+            //activePlot->selectedPlottables().value(plottable)->setSelectedPen(graphPen);
         }
 
         for(int axis = 0 ; axis < activePlot->selectedAxes().size() ; axis++)
@@ -421,6 +422,7 @@ void plot_interface::selectedPlot_stats()
         {
             plot_analytics analytics;
             plotStats stats;
+            //activePlot->selectedGraphs().first()
             analytics.plotAnalyze(activePlot->selectedGraphs().first(), &stats);
             //HTML not supported in mobile OSes
             //How to handle this long term?
@@ -541,8 +543,8 @@ void plot_interface::selected_modifyData()
             int symbolChar = 122; //z
 
             //Create a vector containing iterators for all the data sources
-            QVector<QMap<double, QCPData>::const_iterator> graphData;
-            QVector<QMap<double, QCPBarData>::iterator> barData;
+            QVector<QCPGraphDataContainer::const_iterator> graphData;
+            QVector<QCPBarsDataContainer::iterator> barData;
             QCPBars* firstBar;
             QCPGraph* firstGraph;
 
@@ -601,23 +603,23 @@ void plot_interface::selected_modifyData()
 
             if(graphData.size()!=0)
             {
-                //TODO: with the new smart dropping of data point this is broken....disable for now, re-enable later
                 while(graphData.first() != firstGraph->data()->constEnd())
                 {
                     plotValue.clear();
-                    x.append(graphData.first().key());
+                    x.append(graphData.first()->key);
                     //populate QScriptValueList with data from each graph for the plotFunction call
                     for(int graph = 0 ; graph < graphData.size() ; graph++)
                     {
-                        QMap<double, QCPData>::const_iterator refIterator = graphData.value(graph);
+                        QCPGraphDataContainer::const_iterator refIterator = graphData.value(graph);
                         QCPGraph* currentGraph =  qobject_cast<QCPGraph*>(activePlot->selectedPlottables().value(graph));
                         plot_analytics plotAnalytics;
-                        if(plotAnalytics.nearestByKeyValue(graphData.first().value(), currentGraph, &refIterator))
-                        {
-                            plotValue << refIterator.value().value;
-                        }
-                        else
-                            plotValue << 0;
+                        //TODO: QCP2 Fix
+//                        if(plotAnalytics.nearestByKeyValue(graphData.first(), currentGraph, &refIterator))
+//                        {
+//                            plotValue << refIterator->value;
+//                        }
+//                        else
+//                            plotValue << 0;
 
                         //plotValue << graphData.value(graph).value().value;
                         graphData[graph]++;
@@ -639,13 +641,13 @@ void plot_interface::selected_modifyData()
                     plotValue.clear();
                     for(int bar = 0 ; bar < barData.size() ; bar++)
                     {
-                        plotValue << barData.value(bar).value().value;
+                        plotValue << barData.value(bar)->value;
                     }
 
-                    barData.first().value().value = plotFunction.call(plotValue).toNumber();
+                    barData.first()->value = plotFunction.call(plotValue).toNumber();
                     //Make sure the result is not infinite or non-existant
-                    if(isInvalidData(barData.first().value().value))
-                        barData.first().value().value = 0;//std::numeric_limits<double>::quiet_NaN();
+                    if(isInvalidData(barData.first()->value))
+                        barData.first()->value = 0;//std::numeric_limits<double>::quiet_NaN();
 
                     for(int bar = 0 ; bar < barData.size() ; bar++)
                     {

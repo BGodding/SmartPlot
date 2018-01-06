@@ -21,10 +21,12 @@ smart_plot::smart_plot(QWidget *parent) :
     this->resize(1024, 600);
     this->installEventFilter(this);
 
+    //Setup the main menu
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
 
     //Data Handlers: Add menu calls here
     csvHandler.addToSystemMenu(fileMenu);
+    clocHandler.addToSystemMenu(fileMenu);
 
     fileMenu->addSeparator();
 
@@ -127,7 +129,8 @@ void smart_plot::initGraph(QCustomPlot *customPlot)
 
     //Add title
     customPlot->plotLayout()->insertRow(0);
-    customPlot->plotLayout()->addElement(0, 0, new QCPPlotTitle(customPlot, tr("Open Files to Plot Data")));
+    QCPTextElement *title = new QCPTextElement(customPlot, tr("Open Files to Plot Data"), QFont("sans", 17, QFont::Bold));
+    customPlot->plotLayout()->addElement(0, 0, title);
 
     //Add axes labels
     customPlot->xAxis->setLabel(tr("X Axis"));
@@ -145,8 +148,7 @@ void smart_plot::initGraph(QCustomPlot *customPlot)
     connect(customPlot, SIGNAL(mousePress(QMouseEvent*)),
             this, SLOT(mousePress(QMouseEvent*)));
 
-    connect(customPlot, SIGNAL(titleDoubleClick(QMouseEvent*,QCPPlotTitle*)),
-            this, SLOT(titleDoubleClick(QMouseEvent*,QCPPlotTitle*)));
+    connect(title, SIGNAL(doubleClicked(QMouseEvent*)), this, SLOT(titleDoubleClick(QMouseEvent*)));
 
     connect(customPlot, SIGNAL(axisDoubleClick(QCPAxis*,QCPAxis::SelectablePart,QMouseEvent*)),
             this, SLOT(axisDoubleClick(QCPAxis*,QCPAxis::SelectablePart)));
@@ -202,21 +204,23 @@ void smart_plot::mousePress(QMouseEvent *event)
 
                 bool ok = false;
                 double m = std::numeric_limits<double>::max();
-
+                //QCPGraphDataContainer
                 analytics.plotAnalyze( graph, &stats, graph->keyAxis()->range());
 
-                foreach(QCPData data, graph->data()->values())
+                //Iterate through on screen data and see which point is closest
+                QCPGraphDataContainer::const_iterator QCPGraphDataBegin = graph->data().data()->findBegin(graph->keyAxis()->range().lower,true);
+                QCPGraphDataContainer::const_iterator QCPGraphDataEnd = graph->data().data()->findEnd(graph->keyAxis()->range().upper,true);
+                for (QCPGraphDataContainer::const_iterator QCPGraphDataIt=QCPGraphDataBegin; QCPGraphDataIt!=QCPGraphDataEnd; ++QCPGraphDataIt)
                 {
                     double valueRange = graph->valueAxis()->range().size();
-
-                    double keyDistance = qAbs(mouseKey - data.key)/keyRange;
-                    double valueDistance = qAbs(mouseValue - data.value)/valueRange;
+                    double keyDistance = qAbs(mouseKey - QCPGraphDataIt->key)/keyRange;
+                    double valueDistance = qAbs(mouseValue - QCPGraphDataIt->value)/valueRange;
 
                     if( (valueDistance + keyDistance) < m )
                     {
-                        value = data.value;
-                        key = data.key;
-                        keyDistance_no_abs = mouseKey - data.key;
+                        value = QCPGraphDataIt->value;
+                        key = QCPGraphDataIt->key;
+                        keyDistance_no_abs = mouseKey - QCPGraphDataIt->key;
                         ok = true;
                         m = (valueDistance + keyDistance);
                     }
@@ -227,7 +231,7 @@ void smart_plot::mousePress(QMouseEvent *event)
                 {
                     QToolTip::hideText();
 
-                    if(activePlot()->xAxis->tickLabelType()==QCPAxis::ltDateTime)
+                    if(!qSharedPointerDynamicCast<QCPAxisTickerDateTime>(graph->keyAxis()->ticker()).isNull())
                     {
                         if(QApplication::keyboardModifiers().testFlag(Qt::ControlModifier))
                         {
@@ -235,7 +239,6 @@ void smart_plot::mousePress(QMouseEvent *event)
 
                             // add the bracket at the top:
                             QCPItemBracket *bracket = new QCPItemBracket(activePlot());
-                            activePlot()->addItem(bracket);
                             bracket->left->setAxes(graph->keyAxis(), graph->valueAxis());
                             bracket->left->setCoords(prevKey, value);
                             bracket->right->setAxes(graph->keyAxis(), graph->valueAxis());
@@ -243,7 +246,6 @@ void smart_plot::mousePress(QMouseEvent *event)
 
                             // add the text label at the top:
                             QCPItemText *wavePacketText = new QCPItemText(activePlot());
-                            activePlot()->addItem(wavePacketText);
                             wavePacketText->position->setParentAnchor(bracket->center);
                             wavePacketText->position->setCoords(0, -10); // move 10 pixels to the top from bracket center anchor
                             wavePacketText->setPositionAlignment(Qt::AlignBottom|Qt::AlignHCenter);
@@ -270,7 +272,7 @@ void smart_plot::mousePress(QMouseEvent *event)
                         else if(QApplication::keyboardModifiers().testFlag(Qt::ShiftModifier))
                         {
                             //Delete point
-                            graph->removeData(key);
+                            graph->data().data()->remove(key);
                             activePlot()->replot();
                         }
                         //Hold Alt to insert NAN(Break link?)
@@ -288,7 +290,7 @@ void smart_plot::mousePress(QMouseEvent *event)
                                     "<tr>" "<td>AVG:</td>" "<td>%L4</td>" "</tr>"
                                    "</table>").
                                arg(graph->name().isEmpty() ? "..." : graph->name()).
-                               arg(dateTime.toString(activePlot()->xAxis->dateTimeFormat())).
+                               arg(dateTime.toString(qSharedPointerDynamicCast<QCPAxisTickerDateTime>(graph->keyAxis()->ticker())->dateTimeFormat())).
                                arg(value).
                                arg(stats.avgValue),
                                activePlot(), activePlot()->rect());
@@ -331,8 +333,8 @@ void smart_plot::contextMenuRequest(QPoint pos)
 
     plotInterface.addToContextMenu(contextMenu, activePlot());
 
-    //Data Handlers: Add context menu generation function calls here
     csvHandler.addToContextMenu(contextMenu, activePlot());
+    clocHandler.addToContextMenu(contextMenu, activePlot());
 
     contextMenu->addSeparator();
     influxdbHandler.addToContextMenu(contextMenu, activePlot());
@@ -341,9 +343,12 @@ void smart_plot::contextMenuRequest(QPoint pos)
         contextMenu->popup(activePlot()->mapToGlobal(pos));
 }
 
-void smart_plot::titleDoubleClick(QMouseEvent* event, QCPPlotTitle* title)
+void smart_plot::titleDoubleClick(QMouseEvent* event)
 {
-    Q_UNUSED(event)
+  Q_UNUSED(event)
+  if (QCPTextElement *title = qobject_cast<QCPTextElement*>(sender()))
+  {
+    // Set the plot title by double clicking on it
     bool ok;
     QString newTitle = QInputDialog::getText(this, tr("SmartPlot"), tr("New plot title:"), QLineEdit::Normal, title->text(), &ok, (Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint));
     if (ok)
@@ -356,6 +361,7 @@ void smart_plot::titleDoubleClick(QMouseEvent* event, QCPPlotTitle* title)
 
         activePlot()->replot();
     }
+  }
 }
 
 void smart_plot::axisDoubleClick(QCPAxis *axis, QCPAxis::SelectablePart part)
@@ -374,13 +380,13 @@ void smart_plot::axisDoubleClick(QCPAxis *axis, QCPAxis::SelectablePart part)
     else if (part == QCPAxis::spTickLabels)
     {
         QSettings settings;
-        QCPAxis::LabelType currentLabelType = static_cast<QCPAxis::LabelType>(settings.value("X Axis Tick Label Format", QCPAxis::ltDateTime).toInt());
-        QCPAxis::LabelType newLabelType;
+        plot_interface::tickerType currentLabelType = static_cast<plot_interface::tickerType>(settings.value("X Axis Tick Label Format", plot_interface::dateTime).toInt());
+        plot_interface::tickerType newLabelType;
 
-        if(currentLabelType == QCPAxis::ltDateTime)
-            newLabelType = QCPAxis::ltNumber;
-        else// if(currentAxisType == QCPAxis::ltNumber)
-            newLabelType = QCPAxis::ltDateTime;
+        if(currentLabelType == plot_interface::dateTime)
+            newLabelType = plot_interface::fixed;
+        else// if(currentAxisType == plot_interface::fixed)
+            newLabelType = plot_interface::dateTime;
 
         settings.setValue("X Axis Tick Label Format", newLabelType);
         axisHandler.updateGraphAxes(activePlot());
@@ -414,6 +420,7 @@ void smart_plot::iosOpen(const QString & fileName)
 
 bool smart_plot::eventFilter(QObject* object,QEvent* event)
 {
+    //qDebug() << "EF" << event->type();
     if(!url.isEmpty())
     {
         qDebug() << "URL: " << url;
@@ -427,7 +434,6 @@ bool smart_plot::eventFilter(QObject* object,QEvent* event)
         msgBox.setText(tr("Plase select the file type"));
         msgBox.setInformativeText(modifier.value("File Name").toString());
 
-        //Data Handlers: Add import data calls here (support for drag and drop)
         QPushButton *dataFileButton = csvHandler.addToMessageBox(msgBox);
 
         msgBox.exec();
@@ -507,7 +513,7 @@ void smart_plot::resizeEvent(QResizeEvent* event)
     if(!allPButtons.isEmpty())
         allPButtons.first()->setGeometry( 0, (screenSize.height()-buttonHeight), buttonWidth, buttonHeight );
     #else
-    activePlot()->xAxis->setAutoTickCount(this->width()/200);
+    //activePlot()->xAxis->setAutoTickCount(this->width()/200);
     #endif
 }
 

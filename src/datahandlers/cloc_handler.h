@@ -11,6 +11,7 @@
 #include "text_helper.h"
 #include "tabs/plot/plot_handler.h"
 #include "tabs/plot/axis_handler.h"
+#include "tabs/plot/plot_interface.h"
 
 class cloc_handler : public QObject
 {
@@ -40,27 +41,6 @@ private:
     void processLineFromFile(QString line, QString delimiter, QList<QVariantMap> &metaData);
     void connectToClocDatabase(QSqlDatabase *clocData);
 
-//  Series data vectors are stored so the sub vector contains all data in a column
-//  This works well as we often want to take and plot a column of data
-//  Header: timestamp     | Data Set 1    | Data Set 2    | ... | Data Set x
-//  Row 1 : Vector [0][0] | Vector [1][0] | Vector [2][0] | ... | Vector [x][0]
-//  Row 2 : Vector [0][1] | Vector [1][1] | Vector [2][1] | ... | Vector [x][1]
-//               ...      |      ...      |      ...      | ... |      ...
-//  Row y : Vector [0][y] | Vector [1][y] | Vector [2][y] | ... | Vector [x][y]
-    QVector<QVector<double> > seriesData;
-
-//  Series:
-//  Collection of data that share a measurement, tag set, and retention policy.
-//  Example: GCA ADM Data Download, Linesite GDL Download
-//  Measurement:
-//  Describes the data stored in the associated fields. Measurements are strings.
-//  Example: GCA ADM "Event Log", GCA ADM "Diagnostic Log", Linesite "Event", Linesite "Melter Current"
-//  Key Field:
-//  Field keys are strings and they store metadata
-//  Example: "Event Code" Column header in GCA ADM Event log, InvisiPac "value" in LineSite influxDB Melter Current
-//  Key Value:
-//  Field values are the actual data; they can be strings, floats, integers, or booleans. A field value is always associated with a timestamp.
-
 //  metaData contains all meta information about the columns of data being imported
 //  Keys for reference:
 //   text "Series"
@@ -82,8 +62,7 @@ private:
     text_helper th;
     axis_handler ah;
     plot_handler ph;
-
-    int dataDeadTime;
+    plot_interface pi;
 
     QSqlDatabase clocData;
 };

@@ -56,30 +56,28 @@ void plot_analytics::plotAnalyze( QCPGraph *target, QVector<plotStats> *stats, d
 
 void plot_analytics::plotAnalyze( QCPGraph *target, plotStats *stats, QCPRange keyRange)
 {
-    QMap<double, QCPData>::const_iterator plotIterator;
-    QCPData currentPoint, prevPoint;
+    QCPGraphDataContainer::const_iterator plotIterator = target->data().data()->findBegin(keyRange.lower,true);
+    QCPGraphDataContainer::const_iterator targetDataEnd = target->data().data()->findEnd(keyRange.upper,true);
+    QCPGraphData currentPoint, prevPoint;
 
-    //Try to find a start point in the range
+    //Find the data ranges
     currentPoint.key = keyRange.lower;
-    if(nearestByKeyValue(currentPoint, target, &plotIterator))
+    prevPoint = QCPGraphData(plotIterator->key, plotIterator->value);
+
+    while(plotIterator != targetDataEnd && (keyRange.contains(plotIterator->key) || stats->totalData_entrys < 2))
     {
-        prevPoint = plotIterator.value();
-        //qDebug() << "\r\nStart" << QDateTime::fromTime_t((int)plotIterator.value().key) << plotIterator.value().value;
-        while(plotIterator != target->data()->constEnd() && (keyRange.contains(plotIterator.value().key) || stats->totalData_entrys < 2))
-        {
-            currentPoint = plotIterator.value();
-            handlePoints(currentPoint, prevPoint, stats);
+        currentPoint = QCPGraphData(plotIterator->key, plotIterator->value);
+        handlePoints(currentPoint, prevPoint, stats);
 
-            //Value is weighted to account for datapoints that may not be equally spaced
-            if(!isInvalidData(currentPoint.value) && !isInvalidData(prevPoint.value))
-                stats->avgValue += currentPoint.value*(currentPoint.key-prevPoint.key);
+        //Value is weighted to account for datapoints that may not be equally spaced
+        if(!isInvalidData(currentPoint.value) && !isInvalidData(prevPoint.value))
+            stats->avgValue += currentPoint.value*(currentPoint.key-prevPoint.key);
 
-            prevPoint = plotIterator.value();
-            ++plotIterator;
-        }
-        //Divide by total seconds
-        stats->avgValue /= stats->totalData_seconds;
+        prevPoint = QCPGraphData(plotIterator->key, plotIterator->value);
+        ++plotIterator;
     }
+    //Divide by total seconds
+    stats->avgValue /= stats->totalData_seconds;
 }
 
 void plot_analytics::plotAnalyze( QCPGraph *target, QVector<plotStats> *stats, QCPRange keyRange, double iterator)
@@ -127,13 +125,13 @@ void plot_analytics::plotAnalyze( QCPGraph *target, QVector<plotStats> *stats, Q
 
 bool plot_analytics::handlePoints(double targetValue, double referenceValue, double keyDelta, plotStats *stats)
 {
-    QCPData target(keyDelta, targetValue);
-    QCPData reference(0, referenceValue);
+    QCPGraphData target(keyDelta, targetValue);
+    QCPGraphData reference(0, referenceValue);
 
     return handlePoints(target, reference, stats);
 }
 
-bool plot_analytics::handlePoints(QCPData target, QCPData reference, plotStats *stats)
+bool plot_analytics::handlePoints(QCPGraphData target, QCPGraphData reference, plotStats *stats)
 {
     if( (!isInvalidData(target.key, target.value)) && (!isInvalidData(reference.key, reference.value)) )
     {
@@ -191,49 +189,20 @@ bool plot_analytics::handlePoints(QCPData target, QCPData reference, plotStats *
     return false;
 }
 
-bool plot_analytics::nearestByKeyValue(QCPData target, QCPGraph *reference, QMap<double, QCPData>::const_iterator *iterator)
-{
-    *iterator = reference->data()->find(target.key);
-
-    if(*iterator == reference->data()->end())
-    {
-        *iterator = reference->data()->lowerBound(target.key);
-        if(*iterator == reference->data()->constBegin())
-        {
-            *iterator = reference->data()->upperBound(target.key);
-            if(*iterator == reference->data()->constEnd())
-            {
-                qDebug() << "Search Fail";
-                return false;
-            }
-        }
-        //Use the prev point, vs the following
-        else
-            *iterator->operator --();
-    }
-
-    return true;
-}
-
 void plot_analytics::clearUnwantedPoints(QCPGraph *target, QCPGraph *enableReference, QCPRange valueEnableRange)
 {
-    QMap<double, QCPData>::iterator plotIterator = target->data()->begin();
-    QMap<double, QCPData>::const_iterator refIterator = enableReference->data()->begin();
+    QCPGraphDataContainer::iterator plotIterator = target->data()->begin();
+    QCPGraphDataContainer::const_iterator refIterator;
 
     //First we scan and any time the reference plot is not in range wipe the plot data.
     //TODO: This will break the plot, do we clone the plot? That could be a huge amount of data...
     while(plotIterator != target->data()->end())
     {
         //Find closest reference point
-        if(nearestByKeyValue(plotIterator.value(), enableReference, &refIterator))
-        {
-            QCPData nearestReferencePoint = refIterator.value();
+        refIterator = enableReference->data().data()->findBegin(plotIterator->key, true);
+        if (!valueEnableRange.contains(refIterator->value))
+            plotIterator->value = std::numeric_limits<double>::quiet_NaN();
 
-            if(!valueEnableRange.contains(nearestReferencePoint.value))
-                plotIterator.value().value = std::numeric_limits<double>::quiet_NaN();
-        }
-        else
-            plotIterator.value().value = std::numeric_limits<double>::quiet_NaN();
         plotIterator++;
     }
 }

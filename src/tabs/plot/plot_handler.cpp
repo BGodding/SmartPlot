@@ -63,31 +63,38 @@ QCPGraph *plot_handler::addPlotLine(QVector<double> &key, QVector<double> &value
     newPlot->setData(key, value);
     newPlot->setLineStyle(QCPGraph::lsLine);
     newPlot->setAdaptiveSampling(true);
+    newPlot->setSelectable(QCP::stWhole);
 
     QPen graphPen;
     generatePenColor(&graphPen);
     newPlot->setPen(setPenAlpha(graphPen, 192));
-    newPlot->setSelectedPen(graphPen);
+    QCPSelectionDecorator *selectionDecorator = newPlot->selectionDecorator();
+    graphPen.setWidth(2);
+    selectionDecorator->setPen(graphPen);
+    newPlot->setSelectionDecorator(selectionDecorator);
 
     return newPlot;
 }
 
-QCPGraph *plot_handler::addPlotLine(QCPDataMap *dataMap, QString name, QCustomPlot *plot)
+QCPGraph *plot_handler::addPlotLine(QCPGraphDataContainer *dataMap, QString name, QCustomPlot *plot)
 {
     //Code here for graphing
     QCPGraph *newPlot = plot->addGraph();
 
     newPlot->setName(name);
-    newPlot->setData(dataMap, true);
+    newPlot->data()->set(*dataMap);
     newPlot->setLineStyle(QCPGraph::lsLine);
     newPlot->setAdaptiveSampling(true);
+    newPlot->setSelectable(QCP::stWhole);
 
     QPen graphPen;
     generatePenColor(&graphPen);
     newPlot->setPen(setPenAlpha(graphPen, 192));
-    newPlot->setSelectedPen(graphPen);
+    QCPSelectionDecorator *selectionDecorator = newPlot->selectionDecorator();
+    selectionDecorator->setPen(graphPen);
+    newPlot->setSelectionDecorator(selectionDecorator);
 
-//    ah.updateGraphAxes(plot);
+    ah.updateGraphAxes(plot);
 
     plot->replot();
 
@@ -96,7 +103,7 @@ QCPGraph *plot_handler::addPlotLine(QCPDataMap *dataMap, QString name, QCustomPl
 
 void plot_handler::plotConvert( QCPGraph *graph, QString functionString )
 {
-    QMap<double, QCPData>::iterator plotData = graph->data()->begin();
+    QCPGraphDataContainer::iterator plotData = graph->data()->begin();
 
     QString scriptString("(function(x) { return ");
     scriptString.append(functionString);
@@ -108,11 +115,11 @@ void plot_handler::plotConvert( QCPGraph *graph, QString functionString )
 
     while( plotData != graph->data()->end() )
     {
-        if( !isInvalidData(plotData.value().value) )
+        if( !isInvalidData(plotData->value) )
         {
             plotValue.clear();
-            plotValue << plotData.value().value;
-            plotData.value().value = plotFunction.call(plotValue).toNumber();
+            plotValue << plotData->value;
+            plotData->value = plotFunction.call(plotValue).toNumber();
         }
         ++plotData;
     }
@@ -121,15 +128,15 @@ void plot_handler::plotConvert( QCPGraph *graph, QString functionString )
 void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
 {
     QVector<double> x, y;
-    QMap<double, QCPData>::const_iterator plotData = graph->data()->constBegin();
+    QCPGraphDataContainer::const_iterator plotData = graph->data()->constBegin();
 
-    QDateTime currentDataKey_qDateTime = QDateTime::fromTime_t((int)plotData.value().key);
+    QDateTime currentDataKey_qDateTime = QDateTime::fromTime_t((int)plotData->key);
 
     QCustomPlot* activePlot = (QCustomPlot*)metaData["Active Plot"].value<void *>();
 
-    double currentDataValue = plotData.value().value;
-    double periodStartValue = plotData.value().value;
-    double periodBegin = plotData.value().key;
+    double currentDataValue = plotData->value;
+    double periodStartValue = plotData->value;
+    double periodBegin = plotData->key;
     double periodEnd = 0;
     double periodInterval;
 
@@ -200,21 +207,21 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
         else
         {
             //Check for NaN
-            if(isInvalidData(plotData.value().value))
+            if(isInvalidData(plotData->value))
             {
                 ++plotData;
                 continue;
             }
-            if (plotData.value().key < periodEnd)
+            if (plotData->key < periodEnd)
             {
-                currentDataValue = plotData.value().value;
+                currentDataValue = plotData->value;
                 ++plotData;
                 continue;
             }
         }
 
         //Found our next applicable point
-        if( (plotData.value().key >= periodEnd) || !moreData)
+        if( (plotData->key >= periodEnd) || !moreData)
         {
             periodInterval = periodEnd - periodBegin;
 
@@ -241,8 +248,8 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
         return;
 
     QCPBars *periodic = new QCPBars(activePlot->xAxis, activePlot->yAxis);
-    activePlot->addPlottable(periodic);
     periodic->setName(graph->name());
+    periodic->setSelectable(QCP::stWhole);
 
     if( (metaData.value("Interval Type") == "Year") || (metaData.value("Interval Type") == "Month") )
     {

@@ -2,6 +2,8 @@
 
 #include "utility.h"
 
+#include "plot_interface.h"
+
 void axis_handler::updateGraphAxes(QCustomPlot *plot)
 {
     //Only rescale for the first graph
@@ -12,8 +14,38 @@ void axis_handler::updateGraphAxes(QCustomPlot *plot)
 
     if(plot->graphCount() > 0)
     {
+        //qSharedPointerDynamicCast<QCPAxisTickerDateTime>(plot->xAxis->ticker())
+        if( plot->xAxis->ticker().dynamicCast<QCPAxisTickerDateTime>().isNull() )
+        {
+            qDebug() << "DateTime";
+        }
+        else if( qSharedPointerDynamicCast<QCPAxisTickerFixed>(plot->xAxis->ticker()).isNull() )
+        {
+            qDebug() << "Fixed";
+        }
+        else
+        {
+            qDebug() << "IDK";
+        }
+
         QSettings settings;
-        plot->xAxis->setTickLabelType( static_cast<QCPAxis::LabelType>(settings.value("X Axis Tick Label Format", QCPAxis::ltDateTime).toInt()) );
+        plot_interface::tickerType currentLabelType = static_cast<plot_interface::tickerType>(settings.value("X Axis Tick Label Format", plot_interface::dateTime).toInt());
+
+        //TODO: Not this, this sucks
+        if(currentLabelType == plot_interface::dateTime)
+        {
+            //Doing this is bad....mKay
+            QSharedPointer<QCPAxisTickerDateTime> ticker(new QCPAxisTickerDateTime);
+            //qDebug() << ticker << plot->xAxis->ticker();
+            plot->xAxis->setTicker(ticker);
+        }
+        else
+        {
+            QSharedPointer<QCPAxisTickerFixed> ticker(new QCPAxisTickerFixed);
+            //qDebug() << ticker << plot->xAxis->ticker();
+            ticker->setScaleStrategy(QCPAxisTickerFixed::ssMultiples);
+            plot->xAxis->setTicker(ticker);
+        }
     }
 
     plot->replot();
@@ -123,13 +155,16 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, Q
     }
 
     plot->xAxis2->setTickLabels(true);
-    plot->xAxis2->setAutoTicks(false);
-    plot->xAxis2->setAutoTickLabels(false);
 
     //Use the x axis dates as the tick vector
-    plot->xAxis2->setTickVector(eventAxisDateTimes);
-    //Use the parsed strings vector as the labels
-    plot->xAxis2->setTickVectorLabels(eventAxisStrings);
+    QSharedPointer<QCPAxisTickerText> ticker = plot->xAxis2->ticker().dynamicCast<QCPAxisTickerText>();
+    if(ticker == NULL)
+    {
+        //Force it to text
+        plot->xAxis2->setTicker(QSharedPointer<QCPAxisTickerText>(new QCPAxisTickerText));
+        ticker = plot->xAxis2->ticker().dynamicCast<QCPAxisTickerText>();
+    }
+    ticker->setTicks(eventAxisDateTimes, eventAxisStrings);
 
     plot->replot();
 }
@@ -197,7 +232,7 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, Q
                 {
                     //This is where we are iterating through the datas
                     //Pass valuesValue.toArray() minus the time to isEventVisible?
-                    QCPData dataPoint;
+                    QCPGraphData dataPoint;
                     QDateTime dateTime = QDateTime::fromString(valuesValue.toArray().at(keyColumn).toString(), Qt::ISODate);
                     currentDataRowTimeStamp = dateTime.toMSecsSinceEpoch()/1000;
 
@@ -252,14 +287,14 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, Q
         }
     }
 
-    plot->xAxis2->setTickLabels(true);
-    plot->xAxis2->setAutoTicks(false);
-    plot->xAxis2->setAutoTickLabels(false);
+//    plot->xAxis2->setTickLabels(true);
+//    plot->xAxis2->setAutoTicks(false);
+//    plot->xAxis2->setAutoTickLabels(false);
 
-    //Use the x axis dates as the tick vector
-    plot->xAxis2->setTickVector(eventAxisDateTimes);
-    //Use the parsed strings vector as the labels
-    plot->xAxis2->setTickVectorLabels(eventAxisStrings);
+//    //Use the x axis dates as the tick vector
+//    plot->xAxis2->setTickVector(eventAxisDateTimes);
+//    //Use the parsed strings vector as the labels
+//    plot->xAxis2->setTickVectorLabels(eventAxisStrings);
 
     plot->replot();
 }
