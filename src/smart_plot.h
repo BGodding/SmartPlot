@@ -45,7 +45,7 @@ class smart_plot : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit smart_plot(QWidget *parent = 0);
+    explicit smart_plot(QWidget *parent = nullptr);
 
 protected:
     bool eventFilter(QObject *object, QEvent *ev);

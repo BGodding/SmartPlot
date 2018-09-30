@@ -158,7 +158,7 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, Q
 
     //Use the x axis dates as the tick vector
     QSharedPointer<QCPAxisTickerText> ticker = plot->xAxis2->ticker().dynamicCast<QCPAxisTickerText>();
-    if(ticker == NULL)
+    if(ticker == nullptr)
     {
         //Force it to text
         plot->xAxis2->setTicker(QSharedPointer<QCPAxisTickerText>(new QCPAxisTickerText));
@@ -311,12 +311,12 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QVector<QVector<
     {
         QVariantMap keyFieldMetaData = metaData[metaDataIndex];
 
-        if( keyFieldMetaData.value("Value Data Type")=="Event" )
+        if( keyFieldMetaData.value("Data Type")=="Event" )
         {
             QList<QVariant> uniqueEventMetaData = keyFieldMetaData.value("Unique Event Meta Data").toList();
             //qDebug() << "uemd" << uniqueEventMetaData;
 
-            targetMap["Key Value"] = eventData.value(row).value(keyFieldMetaData.value("Data Storage").toInt());
+            targetMap["Key Value"] = eventData.value(row).value(keyFieldMetaData.value("Data Value Storage Index").toInt());
             targetMap["Key Field"] = keyFieldMetaData.value("Key Field");
             //qDebug() << "T" << targetMap;
 
@@ -359,11 +359,11 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QJsonArray event
     {
         QVariantMap keyFieldMetaData = metaData[metaDataIndex];
 
-        if( keyFieldMetaData.value("Value Data Type")=="Event" )
+        if( keyFieldMetaData.value("Data Type")=="Event" )
         {
             QList<QVariant> uniqueEventMetaData = keyFieldMetaData.value("Unique Event Meta Data").toList();
 
-            targetMap["Key Value"] = eventData.at(keyFieldMetaData.value("Data Storage").toInt()).toString();
+            targetMap["Key Value"] = eventData.at(keyFieldMetaData.value("Data Value Storage Index").toInt()).toString();
 
             if(uniqueEventMetaData.contains(targetMap))
             {

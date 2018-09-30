@@ -449,11 +449,11 @@ bool smart_plot::eventFilter(QObject* object,QEvent* event)
         QMenu *objectMenu = qobject_cast<QMenu*>(object);
 
         //Check if object is actually a menu
-        if(objectMenu != NULL)
+        if(objectMenu != nullptr)
         {
             QAction *menuAction = objectMenu->activeAction();
             //Check if the selected item has an action
-            if(menuAction != NULL)
+            if(menuAction != nullptr)
             {
                 objectMenu->activeAction()->trigger();
 
@@ -480,7 +480,7 @@ bool smart_plot::eventFilter(QObject* object,QEvent* event)
         QGestureEvent *gestureEve = static_cast<QGestureEvent*>(event);
         if( QGesture *tapAndHold = gestureEve->gesture(Qt::TapAndHoldGesture) )
         {
-            if( (contextMenu != NULL) && !contextMenu->isVisible())
+            if( (contextMenu != nullptr) && !contextMenu->isVisible())
             {
                 contextMenuRequest(activePlot()->mapFromGlobal(tapAndHold->hotSpot().toPoint()));
             }
@@ -535,5 +535,5 @@ QCustomPlot* smart_plot::activePlot()
     else if (!plots.isEmpty())
         return plots.first();
     else
-        return NULL;
+        return nullptr;
 }

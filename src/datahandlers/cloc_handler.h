@@ -47,8 +47,8 @@ private:
 //   text "Key Field"  was "Key Field" is the text from the header...pretty obvious
 //   text "Key Field Display Text" is the translated string, will be blank if translations not generated
 //   variable "Source Location" was "Data Source" is the 0 indexed position of the raw data
-//   variable "Storage Location" was "Data Storage" is where in the event or series data vectors the data is stored
-//   text "Value Data Type" is the data type ('Series' for time series data, 'Event' for string based data)
+//   variable "Storage Location" was "Data Value Storage Index" is where in the event or series data vectors the data is stored
+//   text "Data Type" is the data type ('Series' for time series data, 'Event' for string based data)
 //   -----Keys below apply to Data Type = 'Event' Only!-----
 //   text "Action" how to handle if the entry is selected ('OR', 'AND')
 //   bool "Tick Label" is the text is displayed on the x axis when selected

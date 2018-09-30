@@ -6,12 +6,12 @@ void generateUniqueLists( QVector<QVector<QString> > *data, QList<QVariantMap> &
     {
         QVariantMap& keyFieldMetaData = metaData[measurementMetaDataIndex];
 
-        if( (keyFieldMetaData.value("Value Data Type") == "Event") )
+        if( (keyFieldMetaData.value("Data Type") == "Event") )
         {
             QList<QString> list;
             QList<QVariant> uniqueEventMetaData;
             QVariantMap metaData;
-            int column = keyFieldMetaData.value("Data Storage").toInt();
+            int column = keyFieldMetaData.value("Data Value Storage Index").toInt();
 
             generateUniqueList(data, column, list);
             metaData.clear();

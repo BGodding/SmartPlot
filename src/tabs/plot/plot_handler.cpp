@@ -18,7 +18,9 @@ plot_handler::plot_handler()
 QCPGraph *plot_handler::addPlotLine(QVector<QVector<double> > &dataVector, QVariantMap metaData)
 {
     bool ok;
-    int dataColumn = metaData.value("Data Storage").toInt(&ok);
+    int dataKeyColumn = metaData.value("Data Key Storage Index").toInt(&ok);
+    int dataValueColumn = metaData.value("Data Value Storage Index").toInt(&ok);
+    qDebug() << dataKeyColumn << dataValueColumn;
 
     QVector<double> reducedKeyData, reducedValueData;
     int dataPoint;
@@ -27,14 +29,14 @@ QCPGraph *plot_handler::addPlotLine(QVector<QVector<double> > &dataVector, QVari
     double endPoint = 0;
     int pointsDropped = 0;
 
-    for(dataPoint=0; dataPoint < dataVector.value(dataColumn).size(); dataPoint++)
+    for(dataPoint=0; dataPoint < dataVector.value(dataValueColumn).size(); dataPoint++)
     {
         //This code drops points that dont add anything to the plot. Saves up to 90%+ memory
-        if( (dataPoint > 1) && (dataPoint < dataVector.value(dataColumn).size() - 1))
+        if( (dataPoint > 1) && (dataPoint < dataVector.value(dataValueColumn).size() - 1))
         {
-            startPoint = dataVector.value(dataColumn).value(dataPoint-1);
-            midPoint = dataVector.value(dataColumn).value(dataPoint);
-            endPoint = dataVector.value(dataColumn).value(dataPoint+1);
+            startPoint = dataVector.value(dataValueColumn).value(dataPoint-1);
+            midPoint = dataVector.value(dataValueColumn).value(dataPoint);
+            endPoint = dataVector.value(dataValueColumn).value(dataPoint+1);
             if( (isInvalidData(startPoint) && isInvalidData(midPoint) && isInvalidData(endPoint)) ||
                 ( (startPoint == midPoint) &&  (endPoint == midPoint) ) )
             {
@@ -42,14 +44,14 @@ QCPGraph *plot_handler::addPlotLine(QVector<QVector<double> > &dataVector, QVari
                 continue;
             }
         }
-        reducedValueData.append(dataVector.value(dataColumn).value(dataPoint));
-        reducedKeyData.append(dataVector.first().value(dataPoint));
+        reducedValueData.append(dataVector.value(dataValueColumn).value(dataPoint));
+        reducedKeyData.append(dataVector.value(dataKeyColumn).value(dataPoint));
         //qDebug() << reducedKeyData.last() << reducedValueData.last() << startPoint << midPoint << endPoint << pointsDropped;
     }
 
     QCustomPlot* customPlot = (QCustomPlot*)metaData["Active Plot"].value<void *>();
 
-    qDebug() << "dropped" << pointsDropped << "of" << dataVector.value(dataColumn).size();
+    qDebug() << "dropped" << pointsDropped << "of" << dataVector.value(dataValueColumn).size();
 
     return addPlotLine(reducedKeyData, reducedValueData, metaData.value("Key Field").toString(), customPlot);
 }
@@ -185,7 +187,7 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
         }
     }
 
-    periodEnd_qDateTime = QDateTime::fromTime_t((int)periodBegin);
+    periodEnd_qDateTime = QDateTime::fromTime_t((uint)periodBegin);
 
     if( metaData.value("Interval Type") ==  "Count" )
     {

@@ -2,7 +2,7 @@
 
 #include <QMessageBox>
 #include <QPushButton>
-#include <Qdebug>
+#include <QDebug>
 
 QString text_helper::autoDetectDelimiter(QTextStream& stream)
 {
@@ -164,7 +164,7 @@ bool text_helper::isVersionOk(QString minVersion, QString maxVersion, QString re
         return false;
 }
 
-int text_helper::estimateLineCount( QString fileName )
+qint64 text_helper::estimateLineCount( QString fileName )
 {
     QFile file(fileName);
     qint64 fileStartingPosition = 0;
@@ -182,7 +182,7 @@ int text_helper::estimateLineCount( QString fileName )
 
             textStream.readLine();
         }
-        int byteCount = abs(textStream.pos() - fileStartingPosition);
+        qint64 byteCount = abs(textStream.pos() - fileStartingPosition);
 
         file.close();
 
@@ -204,11 +204,11 @@ void text_helper::insertDataBreak(double dateTime, QVector<QVector<double> > &se
     {
         QVariantMap& mData = metaData[metaDataIndex];
 
-        if(mData.contains("Value Data Type"))
+        if(mData.contains("Data Type"))
         {
-            if(mData.value("Value Data Type") == "Series")
+            if(mData.value("Data Type") == "Series")
             {
-                seriesData[mData.value("Data Storage").toInt()].append(std::numeric_limits<double>::quiet_NaN());
+                seriesData[mData.value("Data Value Storage Index").toInt()].append(std::numeric_limits<double>::quiet_NaN());
             }
         }
     }

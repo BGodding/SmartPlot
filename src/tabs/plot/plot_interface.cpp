@@ -82,7 +82,7 @@ void plot_interface::selectionChanged(QCustomPlot *customPlot)
 void plot_interface::addToContextMenu(QMenu *menu, QCustomPlot* plot)
 {
     QVariantMap metaDataMap;
-    metaDataMap["Active Plot"] = qVariantFromValue( (void *)plot);
+    metaDataMap["Active Plot"] = qVariantFromValue(static_cast <void *>(plot));
 
     //If a plot is selected show the modify plot menu
     if( ( plot->selectedPlottables().size() > 0 ) || (plot->selectedItems().size() > 0 ) || ah.isAxisSelected(plot, QCPAxis::atLeft) || ah.isAxisSelected(plot, QCPAxis::atRight) )
@@ -318,7 +318,7 @@ void plot_interface::selected_pickNewLineColor()
         QCustomPlot* activePlot = (QCustomPlot*)metaDataMap["Active Plot"].value<void *>();
 
         QPen graphPen;
-        graphPen.setColor(QColorDialog::getColor(Qt::green, NULL));
+        graphPen.setColor(QColorDialog::getColor(Qt::green, nullptr));
         graphPen.setStyle(Qt::SolidLine);
         graphPen.setWidthF(1);
 
@@ -350,7 +350,7 @@ void plot_interface::selected_pickNewFillColor()
 
         for(int plottable = 0 ; plottable < activePlot->selectedPlottables().size() ; plottable++)
         {
-            activePlot->selectedPlottables().value(plottable)->setBrush(QBrush(QColorDialog::getColor(Qt::green, NULL, QString("") ,QColorDialog::ShowAlphaChannel)));
+            activePlot->selectedPlottables().value(plottable)->setBrush(QBrush(QColorDialog::getColor(Qt::green, nullptr, QString("") ,QColorDialog::ShowAlphaChannel)));
         }
         activePlot->replot();
     }
@@ -426,7 +426,7 @@ void plot_interface::selectedPlot_stats()
             analytics.plotAnalyze(activePlot->selectedGraphs().first(), &stats);
             //HTML not supported in mobile OSes
             //How to handle this long term?
-            QMessageBox::about(NULL, tr("Plot Stats"),
+            QMessageBox::about(nullptr, tr("Plot Stats"),
                                  QString(  "Total Time:               %L1\n"
                                            "Sum of Changes:           %L2\n"
                                            "Max Value:                %L3\n"
@@ -553,7 +553,7 @@ void plot_interface::selected_modifyData()
                 QCPBars* currentBar =  qobject_cast<QCPBars*>(activePlot->selectedPlottables().value(plot));
                 QCPGraph* currentGraph =  qobject_cast<QCPGraph*>(activePlot->selectedPlottables().value(plot));
 
-                if((currentBar!=NULL) && (graphData.size()==0))
+                if((currentBar!=nullptr) && (graphData.size()==0))
                 {
                     if(barData.size()==0)
                         firstBar = currentBar;
@@ -565,7 +565,7 @@ void plot_interface::selected_modifyData()
                     else
                         continue;
                 }
-                else if ((currentGraph!=NULL) && (barData.size()==0))
+                else if ((currentGraph!=nullptr) && (barData.size()==0))
                 {
                     if(graphData.size()==0)
                         firstGraph = currentGraph;
@@ -589,7 +589,7 @@ void plot_interface::selected_modifyData()
 
             //Complete the function string with user input
             functionString.append(") { return ");
-            QString userString = QInputDialog::getText(NULL, tr("SmartPlot"), messageBoxText, QLineEdit::Normal, "", &ok, (Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint) );
+            QString userString = QInputDialog::getText(nullptr, tr("SmartPlot"), messageBoxText, QLineEdit::Normal, "", &ok, (Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint) );
             functionString.append(userString);
             functionString.append("; })");
 

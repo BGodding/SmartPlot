@@ -19,7 +19,7 @@ public:
     int versionStringToInt(QString version);
     QString versionIntToString(int version);
     bool isVersionOk(QString minVersion, QString maxVersion, QString readVersion);
-    int estimateLineCount( QString fileName );
+    qint64 estimateLineCount( QString fileName );
 
     void insertDataBreak(double dateTime, QVector<QVector<double> > &seriesData, QVector<QVector<QString> > &eventData, QList<QVariantMap> &metaData);
 };

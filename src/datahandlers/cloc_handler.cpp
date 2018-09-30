@@ -23,17 +23,17 @@ void cloc_handler::addToContextMenu(QMenu *menu, QCustomPlot* plot)
         return;
 
     QVariantMap menuActionMap;
-    menuActionMap["Active Plot"] = qVariantFromValue( (void *)plot);
+    menuActionMap["Active Plot"] = qVariantFromValue( static_cast <void *>(plot));
 
     QMenu *clocMenu = menu->addMenu( tr("CLOC") );
     clocMenu->installEventFilter(this);
 
     menuActionMap["Key Value"] = "ALL";
-    menuActionMap["Data Storage"] = std::numeric_limits<int>::max();
+    menuActionMap["Data Value Storage Index"] = std::numeric_limits<int>::max();
     clocMenu->addAction( tr("All Languages"), this, SLOT(dataPlot()))->setData(menuActionMap);
 
     menuActionMap["Key Value"] = "NONE";
-    menuActionMap["Data Storage"] = std::numeric_limits<int>::max();
+    menuActionMap["Data Value Storage Index"] = std::numeric_limits<int>::max();
     clocMenu->addAction( tr("No Languages"), this, SLOT(dataPlot()))->setData(menuActionMap);
 
     clocMenu->addSeparator();
@@ -42,7 +42,7 @@ void cloc_handler::addToContextMenu(QMenu *menu, QCustomPlot* plot)
     for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
     {
         menuActionMap = metaData.value(metaDataIndex);
-        menuActionMap["Active Plot"] = qVariantFromValue( (void *)plot);
+        menuActionMap["Active Plot"] = qVariantFromValue( static_cast <void *>(plot));
 
         QAction* action = clocMenu->addAction(QIcon(":/graphics/visible.png"), menuActionMap.value("Key Field").toString(), this, SLOT(dataPlot()));
         action->setData(menuActionMap);
@@ -66,6 +66,7 @@ void cloc_handler::dataImport(QVariantMap modifier)
 
 void cloc_handler::updateAxis(QCustomPlot *plot)
 {
+    (void)plot;
 }
 
 bool cloc_handler::eventFilter(QObject* object,QEvent* event)
@@ -75,12 +76,12 @@ bool cloc_handler::eventFilter(QObject* object,QEvent* event)
         QMenu *objectMenu = qobject_cast<QMenu*>(object);
 
         //Check if object is actually a menu
-        if(objectMenu != NULL)
+        if(objectMenu != nullptr)
         {
             QAction *menuAction = objectMenu->activeAction();
 
             //Check if the selected item has an action
-            if(menuAction != NULL)
+            if(menuAction != nullptr)
             {
                 objectMenu->activeAction()->trigger();
 
@@ -110,7 +111,7 @@ void cloc_handler::menuDataImport()
     QSettings settings;
     QVariantMap modifier;
 
-    QString fileName = QFileDialog::getOpenFileName (NULL, tr("Open CLOC results file"),
+    QString fileName = QFileDialog::getOpenFileName (nullptr, tr("Open CLOC results file"),
                                                      settings.value("CLOC Handler Source Directory").toString(), "TEXT (*.txt);;ANY (*.*)");
     if(!fileName.isEmpty())
     {
@@ -128,6 +129,7 @@ void cloc_handler::dataPlot()
     if (QAction* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap selectionData = contextAction->data().toMap();
+        //QCustomPlot* customPlot = dynamic_cast <QCustomPlot*>(selectionData["Active Plot"].value<void *>());
         QCustomPlot* customPlot = (QCustomPlot*)selectionData["Active Plot"].value<void *>();
 
         for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
@@ -310,7 +312,7 @@ void cloc_handler::openDelimitedFile(QString fileName)
         QTextStream textStream(&file);
         textStream.setAutoDetectUnicode(true);
 
-        QProgressDialog progress(tr("Importing Data"), tr("Cancel"), 0, file.size(), NULL, (Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint));
+        QProgressDialog progress(tr("Importing Data"), tr("Cancel"), 0, int(file.size()), nullptr, (Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint));
         progress.setWindowModality(Qt::WindowModal);
         progress.setMinimumDuration(0);
 
@@ -320,7 +322,7 @@ void cloc_handler::openDelimitedFile(QString fileName)
         while (!textStream.atEnd() && !progress.wasCanceled())
         {
             line = QString(textStream.readLine());
-            progress.setValue(file.pos());
+            progress.setValue(int(file.pos()));
 
             if (!line.isEmpty() && !line.startsWith(QChar::Null))
             {
