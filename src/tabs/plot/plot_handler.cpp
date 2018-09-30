@@ -49,7 +49,7 @@ QCPGraph *plot_handler::addPlotLine(QVector<QVector<double> > &dataVector, QVari
         //qDebug() << reducedKeyData.last() << reducedValueData.last() << startPoint << midPoint << endPoint << pointsDropped;
     }
 
-    QCustomPlot* customPlot = (QCustomPlot*)metaData["Active Plot"].value<void *>();
+    QCustomPlot* customPlot = static_cast <QCustomPlot*>(metaData["Active Plot"].value<void *>());
 
     qDebug() << "dropped" << pointsDropped << "of" << dataVector.value(dataValueColumn).size();
 
@@ -132,9 +132,9 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
     QVector<double> x, y;
     QCPGraphDataContainer::const_iterator plotData = graph->data()->constBegin();
 
-    QDateTime currentDataKey_qDateTime = QDateTime::fromTime_t((int)plotData->key);
+    QDateTime currentDataKey_qDateTime = QDateTime::fromTime_t(uint(plotData->key));
 
-    QCustomPlot* activePlot = (QCustomPlot*)metaData["Active Plot"].value<void *>();
+    QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaData["Active Plot"].value<void *>());
 
     double currentDataValue = plotData->value;
     double periodStartValue = plotData->value;
@@ -152,7 +152,7 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
     //Line up start date time to nearest interval
     if( metaData.value("Interval Type") == "Count" )
     {
-        periodBegin -= (int)periodBegin%metaData["Interval Value"].toInt();
+        periodBegin -= int(periodBegin)%metaData["Interval Value"].toInt();
     }
     else
     {
@@ -187,7 +187,7 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
         }
     }
 
-    periodEnd_qDateTime = QDateTime::fromTime_t((uint)periodBegin);
+    periodEnd_qDateTime = QDateTime::fromTime_t(uint(periodBegin));
 
     if( metaData.value("Interval Type") ==  "Count" )
     {

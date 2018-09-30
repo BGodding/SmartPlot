@@ -130,7 +130,7 @@ void cloc_handler::dataPlot()
     {
         QVariantMap selectionData = contextAction->data().toMap();
         //QCustomPlot* customPlot = dynamic_cast <QCustomPlot*>(selectionData["Active Plot"].value<void *>());
-        QCustomPlot* customPlot = (QCustomPlot*)selectionData["Active Plot"].value<void *>();
+        QCustomPlot* customPlot = static_cast <QCustomPlot*>(selectionData["Active Plot"].value<void *>());
 
         for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
         {

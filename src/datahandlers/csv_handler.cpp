@@ -186,7 +186,7 @@ void csv_handler::dataPlot()
     if (QAction* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap selectionData = contextAction->data().toMap();
-        QCustomPlot* plot = (QCustomPlot*)selectionData["Active Plot"].value<void *>();
+        QCustomPlot* plot = static_cast <QCustomPlot*>(selectionData["Active Plot"].value<void *>());
 
         if(selectionData.value("Data Type") == "Series")
         {

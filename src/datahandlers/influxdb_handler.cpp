@@ -53,7 +53,7 @@ void influxdb_handler::menuConfigure()
 {
     bool ok;
     QSettings settings;
-    QString userString = QInputDialog::getText(NULL, tr("SmartPlot"), "Enter Address and port", QLineEdit::Normal, settings.value("Influx DB Host").toString(), &ok, (Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint) );
+    QString userString = QInputDialog::getText(nullptr, tr("SmartPlot"), "Enter Address and port", QLineEdit::Normal, settings.value("Influx DB Host").toString(), &ok, (Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint) );
 
     settings.setValue("Influx DB Host", userString);
     setInfluxAddress(userString);
@@ -65,7 +65,7 @@ void influxdb_handler::menuConfigure()
      if (QAction* contextAction = qobject_cast<QAction*>(sender()))
      {
          QVariantMap selectionData = contextAction->data().toMap();
-         QCustomPlot* plot = (QCustomPlot*)selectionData["Active Plot"].value<void *>();
+         QCustomPlot* plot = static_cast <QCustomPlot*>(selectionData["Active Plot"].value<void *>());
          qDebug() << selectionData;
 
          QJsonDocument result = query(QUrlQuery(QString("db=%1&epoch=s&q=SELECT (%2) FROM %3 WHERE %4=\'%5\'")
@@ -174,12 +174,12 @@ bool influxdb_handler::eventFilter(QObject* object,QEvent* event)
         QMenu *objectMenu = qobject_cast<QMenu*>(object);
 
         //Check if object is actually a menu
-        if(objectMenu != NULL)
+        if(objectMenu != nullptr)
         {
             QAction *menuAction = objectMenu->activeAction();
 
             //Check if the selected item has an action
-            if(menuAction != NULL)
+            if(menuAction != nullptr)
             {
                 objectMenu->activeAction()->trigger();
 
@@ -219,7 +219,7 @@ QJsonDocument influxdb_handler::query(QUrlQuery urlQuery)
     //blocks stack until "finished()" has been called
     loop.exec();
 
-    QString strReply = (QString)reply->readAll();
+    QString strReply = QString(reply->readAll());
 
     if(reply->error() == QNetworkReply::NoError)
     {

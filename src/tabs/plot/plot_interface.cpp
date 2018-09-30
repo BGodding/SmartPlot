@@ -239,7 +239,7 @@ void plot_interface::selected_remove()
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
-        QCustomPlot* activePlot = (QCustomPlot*)metaDataMap["Active Plot"].value<void *>();
+        QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
         //Delete all selected and unused axis
         for(int axis = 0 ; axis < activePlot->selectedAxes().size() ; axis++)
@@ -292,7 +292,7 @@ void plot_interface::selected_rescaleGraph()
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
-        QCustomPlot* activePlot = (QCustomPlot*)metaDataMap["Active Plot"].value<void *>();
+        QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
         if (activePlot->selectedPlottables().size() > 0)
         {
@@ -315,7 +315,7 @@ void plot_interface::selected_pickNewLineColor()
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
-        QCustomPlot* activePlot = (QCustomPlot*)metaDataMap["Active Plot"].value<void *>();
+        QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
         QPen graphPen;
         graphPen.setColor(QColorDialog::getColor(Qt::green, nullptr));
@@ -346,7 +346,7 @@ void plot_interface::selected_pickNewFillColor()
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
-        QCustomPlot* activePlot = (QCustomPlot*)metaDataMap["Active Plot"].value<void *>();
+        QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
         for(int plottable = 0 ; plottable < activePlot->selectedPlottables().size() ; plottable++)
         {
@@ -363,7 +363,7 @@ void plot_interface::selected_changeAxis()
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
-        QCustomPlot* activePlot = (QCustomPlot*)metaDataMap["Active Plot"].value<void *>();
+        QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
         for(int plottable = 0 ; plottable < activePlot->selectedPlottables().size() ; plottable++)
         {
@@ -416,7 +416,7 @@ void plot_interface::selectedPlot_stats()
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
-        QCustomPlot* activePlot = (QCustomPlot*)metaDataMap["Active Plot"].value<void *>();
+        QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
         if(activePlot->selectedGraphs().size() > 0)
         {
@@ -460,7 +460,7 @@ void plot_interface::selectedPlot_convertUnits()
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
-        QCustomPlot* activePlot = (QCustomPlot*)metaDataMap["Active Plot"].value<void *>();
+        QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
         if(activePlot->selectedGraphs().size() > 0)
         {
@@ -498,7 +498,7 @@ void plot_interface::removeAll()
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
-        QCustomPlot* activePlot = (QCustomPlot*)metaDataMap["Active Plot"].value<void *>();
+        QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
         activePlot->clearGraphs();
         activePlot->clearPlottables();
@@ -513,7 +513,7 @@ void plot_interface::selectedPlot_convert()
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
-        QCustomPlot* activePlot = (QCustomPlot*)metaDataMap["Active Plot"].value<void *>();
+        QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
         if(activePlot->selectedGraphs().size() > 0)
         {
@@ -531,7 +531,7 @@ void plot_interface::selected_modifyData()
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
-        QCustomPlot* activePlot = (QCustomPlot*)metaDataMap["Active Plot"].value<void *>();
+        QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
         QVector<double> x, y;
         QString functionString("(function(");
