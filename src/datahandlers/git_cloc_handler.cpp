@@ -1,23 +1,25 @@
-#include "cloc_handler.h"
+#include "git_cloc_handler.h"
 
 #include "utility.h"
 
-cloc_handler::cloc_handler()
+git_cloc_handler::git_cloc_handler()
 {
 }
 
-void cloc_handler::addToSystemMenu(QMenu *menu)
+void git_cloc_handler::addToSystemMenu(QMenu *menu, QCustomPlot* plot)
 {
-    menu->addAction( QIcon(":/graphics/genericData.png"), tr("&OpenClocFile"), this, SLOT(menuDataImport()) );
+    Q_UNUSED(plot);
+    menu->addAction( QIcon(":/graphics/genericData.png"), tr("&OpenGitClocFile"), this, SLOT(menuDataImport()) );
 }
 
-QPushButton *cloc_handler::addToMessageBox(QMessageBox &msgBox)
+QPushButton *git_cloc_handler::addToMessageBox(QMessageBox &msgBox, QCustomPlot* plot)
 {
-    return msgBox.addButton(tr("&OpenClocFile"), QMessageBox::ActionRole);
+    Q_UNUSED(plot);
+    return msgBox.addButton(tr("&OpenGitClocFile"), QMessageBox::ActionRole);
 }
 
 //Can probably make this generic
-void cloc_handler::addToContextMenu(QMenu *menu, QCustomPlot* plot)
+void git_cloc_handler::addToContextMenu(QMenu *menu, QCustomPlot* plot)
 {
     if( metaData.isEmpty() || (plot->selectedPlottables().size() > 0) )
         return;
@@ -52,24 +54,32 @@ void cloc_handler::addToContextMenu(QMenu *menu, QCustomPlot* plot)
     }
 }
 
-void cloc_handler::dataImport(QVariantMap modifier)
+void git_cloc_handler::dataImport(QVariantMap modifier)
 {
     QFileInfo fileName = QFileInfo(modifier.value("File Name").toString());
     if(fileName.exists())
     {
         metaData.clear();
-        connectToClocDatabase(&clocData);
+        if(!clocData.isOpen())
+            connectToClocDatabase(&clocData);
+        else
+        {
+            // Drop existing databases!
+            QSqlQuery query(clocData);
+            query.exec(QString("DROP TABLE snapshots"));
+            query.exec(QString("DROP TABLE results"));
+        }
 
-        openDelimitedFile(fileName.absoluteFilePath());
+        openSqlFile(fileName.absoluteFilePath());
     }
 }
 
-void cloc_handler::updateAxis(QCustomPlot *plot)
+void git_cloc_handler::updateAxis(QCustomPlot *plot)
 {
-    (void)plot;
+    Q_UNUSED(plot);
 }
 
-bool cloc_handler::eventFilter(QObject* object,QEvent* event)
+bool git_cloc_handler::eventFilter(QObject* object,QEvent* event)
 {
     if ( event->type() == QEvent::MouseButtonRelease )
     {
@@ -106,31 +116,36 @@ bool cloc_handler::eventFilter(QObject* object,QEvent* event)
     return false;
 }
 
-void cloc_handler::menuDataImport()
+void git_cloc_handler::menuDataImport()
 {
-    QSettings settings;
-    QVariantMap modifier;
-
-    QString fileName = QFileDialog::getOpenFileName (nullptr, tr("Open CLOC results file"),
-                                                     settings.value("CLOC Handler Source Directory").toString(), "TEXT (*.txt);;ANY (*.*)");
-    if(!fileName.isEmpty())
+    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
     {
-        //Remember directory
-        settings.setValue("CLOC Handler Source Directory", QFileInfo(fileName).absolutePath());
-        modifier["File Name"] = fileName;
+        QVariantMap modifier = contextAction->data().toMap();
+        QSettings settings;
 
-        dataImport(modifier);
+        QString fileName = QFileDialog::getOpenFileName (nullptr, tr("Open CLOC results file"),
+                                                         settings.value("Git CLOC Handler Source Directory").toString(), "TEXT (*.txt);;ANY (*.*)");
+        if(!fileName.isEmpty())
+        {
+            //Remember directory
+            settings.setValue("Git CLOC Handler Source Directory", QFileInfo(fileName).absolutePath());
+            modifier["File Name"] = fileName;
+
+            dataImport(modifier);
+        }
     }
 }
 
-void cloc_handler::dataPlot()
+void git_cloc_handler::dataPlot()
 {
     // make sure this slot is really called by a context menu action, so it carries the data we need
     if (QAction* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap selectionData = contextAction->data().toMap();
-        //QCustomPlot* customPlot = dynamic_cast <QCustomPlot*>(selectionData["Active Plot"].value<void *>());
         QCustomPlot* customPlot = static_cast <QCustomPlot*>(selectionData["Active Plot"].value<void *>());
+
+        QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
+        QDateTime timestamp;
 
         for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
         {
@@ -208,6 +223,9 @@ void cloc_handler::dataPlot()
                 while( (dateTime - dates.last()) > (resolution*1.1) )
                 {
                     dates.append(dates.last() + resolution );
+                    timestamp.setTime_t(dates.last());
+                    textTicker->addTick(dates.last(), timestamp.toString("dd. MMMM yyyy"));
+
                     sameLines.append(sameLines.last() + modifiedLines.last() + addedLines.last());
 
                     modifiedLines.append(0);
@@ -218,6 +236,9 @@ void cloc_handler::dataPlot()
 
             //Add date stamp to the dates vector
             dates.append(dateTime);
+            timestamp.setTime_t(dates.last());
+            textTicker->addTick(dates.last(), timestamp.toString("dd. MMMM yyyy"));
+
             sameLines.append(0);
             modifiedLines.append(0);
             addedLines.append(0);
@@ -283,9 +304,9 @@ void cloc_handler::dataPlot()
         //Stack Bars
         added->moveAbove(modified);
 
-//        customPlot->xAxis->setDateTimeFormat("MMM yyyy");
-        QSharedPointer<QCPAxisTickerDateTime> ticker(new QCPAxisTickerDateTime);
-        customPlot->xAxis->setTicker(ticker);
+        //TODO: Reduce tick labels on large runs
+        customPlot->xAxis->setTicker(textTicker);
+        customPlot->xAxis->setTickLabelRotation(30);
 
         customPlot->plottable()->rescaleAxes();
         for(int plotIndex = 0; plotIndex < customPlot->plottableCount(); plotIndex++)
@@ -297,12 +318,12 @@ void cloc_handler::dataPlot()
     }
 }
 
-void cloc_handler::dataExport(QVariantMap modifier)
+void git_cloc_handler::dataExport(QVariantMap modifier)
 {
     Q_UNUSED(modifier);
 }
 
-void cloc_handler::openDelimitedFile(QString fileName)
+void git_cloc_handler::openSqlFile(QString fileName)
 {
     QFile file(fileName);
     QString line = QString();
@@ -312,17 +333,12 @@ void cloc_handler::openDelimitedFile(QString fileName)
         QTextStream textStream(&file);
         textStream.setAutoDetectUnicode(true);
 
-        QProgressDialog progress(tr("Importing Data"), tr("Cancel"), 0, int(file.size()), nullptr, (Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint));
-        progress.setWindowModality(Qt::WindowModal);
-        progress.setMinimumDuration(0);
-
         //Open connection to database
         QSqlQuery query(clocData);
 
-        while (!textStream.atEnd() && !progress.wasCanceled())
+        while (!textStream.atEnd())
         {
             line = QString(textStream.readLine());
-            progress.setValue(int(file.pos()));
 
             if (!line.isEmpty() && !line.startsWith(QChar::Null))
             {
@@ -347,7 +363,7 @@ void cloc_handler::openDelimitedFile(QString fileName)
     }
 }
 
-void cloc_handler::connectToClocDatabase(QSqlDatabase *clocData)
+void git_cloc_handler::connectToClocDatabase(QSqlDatabase *clocData)
 {
     //Create blank database
     *clocData = QSqlDatabase::addDatabase("QSQLITE", "clocData");

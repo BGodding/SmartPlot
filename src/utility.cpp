@@ -10,21 +10,79 @@ void generateUniqueLists( QVector<QVector<QString> > *data, QList<QVariantMap> &
         {
             QList<QString> list;
             QList<QVariant> uniqueEventMetaData;
-            QVariantMap metaData;
+            QVariantMap entryMetaData;
             int column = keyFieldMetaData.value("Data Value Storage Index").toInt();
 
             generateUniqueList(data, column, list);
-            metaData.clear();
+            entryMetaData.clear();
 
-            metaData["Key Field"] = keyFieldMetaData.value("Key Field");
+            entryMetaData["Key Field"] = keyFieldMetaData.value("Key Field");
 
             for(int row = 0; row < list.size(); row++)
             {
-                metaData["Key Value"] = list.value(row);
-                metaData["Active"] = false;
-                uniqueEventMetaData.append(metaData);
+                entryMetaData["Key Value"] = list.value(row);
+                entryMetaData["Active"] = false;
+                uniqueEventMetaData.append(entryMetaData);
             }
             keyFieldMetaData["Unique Event Meta Data"] = uniqueEventMetaData;
+        }
+    }
+}
+
+// referencePairs uses the key as the primary data source and the value as the reference data source
+// It is also to  be noted the reference data source will no longer be part of the unique list
+void generateUniqueLists( QVector<QVector<QString> > *data, QList<QVariantMap> &metaData, QMap<int, int> referencePairs)
+{
+    for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
+    {
+        //Check if the data source is being used as a reference. Skip if it is.
+//        if( referencePairs.key(measurementMetaDataIndex, std::numeric_limits<int>::max()) != std::numeric_limits<int>::max() )
+//        {
+//            qDebug() << "Skipping" << measurementMetaDataIndex;
+//            continue;
+//        }
+
+        QVariantMap& metaDataAtIndex = metaData[metaDataIndex];
+
+        if( (metaDataAtIndex.value("Data Type") == "Event") )
+        {
+            QList<QVariant> uniqueDataMapList;
+            QVariantMap uniqueDataMap;
+            QVariantMap keyValueDisplayStringMap;
+            int primaryColumn = metaDataAtIndex.value("Data Value Storage Index").toInt();
+
+            uniqueDataMap.clear();
+            uniqueDataMap["Key Field"] = metaDataAtIndex.value("Key Field");
+            uniqueDataMap["Active"] = false;
+
+            //Check if the data source has a reference source
+            if(referencePairs.contains(metaDataIndex))
+            {
+                QVariantMap& metaDataAtReferenceIndex = metaData[referencePairs.value(metaDataIndex)];
+                int referenceColumn = metaDataAtReferenceIndex.value("Data Value Storage Index").toInt();
+                QMap<QString, QString> map = generateUniqueListWithRef(data, primaryColumn, referenceColumn);
+                for(auto e : map.keys())
+                {
+                    uniqueDataMap["Key Value"] = e;
+                    uniqueDataMapList.append(uniqueDataMap);
+                    keyValueDisplayStringMap.insert(QString(uniqueDataMap["Key Field"].toString() + uniqueDataMap["Key Value"].toString()),
+                            QString(uniqueDataMap["Key Value"].toString() + " - " + map.value(e)));
+                }
+            }
+            else
+            {
+                QList<QString> list;
+                generateUniqueList(data, primaryColumn, list);
+                for(int row = 0; row < list.size(); row++)
+                {
+                    uniqueDataMap["Key Value"] = list.value(row);
+                    uniqueDataMapList.append(uniqueDataMap);
+                    keyValueDisplayStringMap.insert(QString(uniqueDataMap["Key Field"].toString() + uniqueDataMap["Key Value"].toString()),
+                            list.value(row));
+                }
+            }
+            metaDataAtIndex["Unique Event Meta Data"] = uniqueDataMapList;
+            metaDataAtIndex["Key Value Display String"] = keyValueDisplayStringMap;
         }
     }
 }
@@ -53,6 +111,19 @@ void generateUniqueList(QVector<QVector<QString> > *data, int column, QList<QStr
             list.append(data->value(row).value(column));
     }
     qSort(list);
+}
+
+QMap<QString, QString> generateUniqueListWithRef(QVector<QVector<QString> > *data, int pColumn, int rColumn)
+{
+    int row;
+    QMap<QString, QString> uniqueData;
+
+    for(row = 0; row < data->size(); row++)
+    {
+        if(!uniqueData.contains(data->value(row).value(pColumn)))
+            uniqueData[data->value(row).value(pColumn)] = data->value(row).value(rColumn);
+    }
+    return uniqueData;
 }
 
 QPen setPenAlpha(QPen pen, int alpha)
@@ -90,6 +161,7 @@ void scaleMenuForScreen(QMenu* menu, QCustomPlot* plot)
         newFont.setPointSize(newFont.pointSize()-1);
         menu->setFont(newFont);
     }
+    //menu->setStyleSheet(" QMenu::item { padding: 1px 1px 1px 18px; border: 1px solid transparent; }");
 //    #endif
     menu->setWindowOpacity(.90);
 }

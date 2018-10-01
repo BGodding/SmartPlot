@@ -12,41 +12,17 @@ void axis_handler::updateGraphAxes(QCustomPlot *plot)
         plot->plottable()->rescaleAxes();
     }
 
-    if(plot->graphCount() > 0)
-    {
-        //qSharedPointerDynamicCast<QCPAxisTickerDateTime>(plot->xAxis->ticker())
-        if( plot->xAxis->ticker().dynamicCast<QCPAxisTickerDateTime>().isNull() )
-        {
-            qDebug() << "DateTime";
-        }
-        else if( qSharedPointerDynamicCast<QCPAxisTickerFixed>(plot->xAxis->ticker()).isNull() )
-        {
-            qDebug() << "Fixed";
-        }
-        else
-        {
-            qDebug() << "IDK";
-        }
-
-        QSettings settings;
-        plot_interface::tickerType currentLabelType = static_cast<plot_interface::tickerType>(settings.value("X Axis Tick Label Format", plot_interface::dateTime).toInt());
-
-        //TODO: Not this, this sucks
-        if(currentLabelType == plot_interface::dateTime)
-        {
-            //Doing this is bad....mKay
-            QSharedPointer<QCPAxisTickerDateTime> ticker(new QCPAxisTickerDateTime);
-            //qDebug() << ticker << plot->xAxis->ticker();
-            plot->xAxis->setTicker(ticker);
-        }
-        else
-        {
-            QSharedPointer<QCPAxisTickerFixed> ticker(new QCPAxisTickerFixed);
-            //qDebug() << ticker << plot->xAxis->ticker();
-            ticker->setScaleStrategy(QCPAxisTickerFixed::ssMultiples);
-            plot->xAxis->setTicker(ticker);
-        }
-    }
+//    if(plot->graphCount() > 0)
+//    {
+//        if( plot->xAxis->ticker().dynamicCast<QCPAxisTickerDateTime>().isNull() )
+//        {
+//            qDebug() << "DateTime";
+//        }
+//        else if( qSharedPointerDynamicCast<QCPAxisTickerFixed>(plot->xAxis->ticker()).isNull() )
+//        {
+//            qDebug() << "Fixed";
+//        }
+//    }
 
     plot->replot();
 }
@@ -299,6 +275,33 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, Q
     plot->replot();
 }
 
+void axis_handler::updateAxisTickCount(QCustomPlot *customPlot, QWidget *window)
+{
+    //qDebug() << "Pixel Ratio:" << devicePixelRatio() << this->width();
+    //Account for higher DPI on mobile
+    #ifdef MOBILE
+
+    int buttonHeight = 60/devicePixelRatio();
+    int buttonWidth = 120/devicePixelRatio();
+
+    customPlot->xAxis->ticker()->setTickCount(window->width()*devicePixelRatio()/250);
+
+    QSize screenSize = QApplication::primaryScreen()->availableSize();
+
+    QList<QPushButton *> allPButtons = window->findChildren<QPushButton *>("+");
+
+    if(!allPButtons.isEmpty())
+        allPButtons.first()->setGeometry( (screenSize.width()-buttonWidth), (screenSize.height()-buttonHeight), buttonWidth, buttonHeight);
+
+    allPButtons = window->findChildren<QPushButton *>("-");
+
+    if(!allPButtons.isEmpty())
+        allPButtons.first()->setGeometry( 0, (screenSize.height()-buttonHeight), buttonWidth, buttonHeight );
+    #else
+    customPlot->xAxis->ticker()->setTickCount(window->width()/200);
+    #endif
+}
+
 bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QVector<QVector<QString> > &eventData, int row, QString &tickLabel )
 {
     bool visible = false;
@@ -309,30 +312,29 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QVector<QVector<
     //Iterate through all the event data sources
     for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
     {
-        QVariantMap keyFieldMetaData = metaData[metaDataIndex];
+        QVariantMap metaDataAtIndex = metaData.at(metaDataIndex);
 
-        if( keyFieldMetaData.value("Data Type")=="Event" )
+        if( metaDataAtIndex.value("Data Type")=="Event" )
         {
-            QList<QVariant> uniqueEventMetaData = keyFieldMetaData.value("Unique Event Meta Data").toList();
+            QList<QVariant> uniqueEventMetaData = metaDataAtIndex.value("Unique Event Meta Data").toList();
             //qDebug() << "uemd" << uniqueEventMetaData;
 
-            targetMap["Key Value"] = eventData.value(row).value(keyFieldMetaData.value("Data Value Storage Index").toInt());
-            targetMap["Key Field"] = keyFieldMetaData.value("Key Field");
-            //qDebug() << "T" << targetMap;
+            targetMap["Key Value"] = eventData.value(row).value(metaDataAtIndex.value("Data Value Storage Index").toInt());
+            targetMap["Key Field"] = metaDataAtIndex.value("Key Field");
 
             if(uniqueEventMetaData.contains(targetMap))
             {
-                if( keyFieldMetaData.value("Action") == "OR" )
+                if( metaDataAtIndex.value("Action") == "OR" )
                 {
                     visible = true;
                 }
             }
-            else if ( keyFieldMetaData.value("Action") == "AND" )
+            else if ( metaDataAtIndex.value("Action") == "AND" )
             {
                 return false;
             }
 
-            if(keyFieldMetaData.value("Tick Label") == true)
+            if(metaDataAtIndex.value("Tick Label") == true)
             {
                 if(!tickLabel.isEmpty())
                     tickLabel.append("-");
@@ -357,27 +359,27 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QJsonArray event
 
     for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
     {
-        QVariantMap keyFieldMetaData = metaData[metaDataIndex];
+        QVariantMap metaDataAtIndex = metaData.at(metaDataIndex);
 
-        if( keyFieldMetaData.value("Data Type")=="Event" )
+        if( metaDataAtIndex.value("Data Type")=="Event" )
         {
-            QList<QVariant> uniqueEventMetaData = keyFieldMetaData.value("Unique Event Meta Data").toList();
+            QList<QVariant> uniqueEventMetaData = metaDataAtIndex.value("Unique Event Meta Data").toList();
 
-            targetMap["Key Value"] = eventData.at(keyFieldMetaData.value("Data Value Storage Index").toInt()).toString();
+            targetMap["Key Value"] = eventData.at(metaDataAtIndex.value("Data Value Storage Index").toInt()).toString();
 
             if(uniqueEventMetaData.contains(targetMap))
             {
-                if( keyFieldMetaData.value("Action") == "OR" )
+                if( metaDataAtIndex.value("Action") == "OR" )
                 {
                     visible = true;
                 }
             }
-            else if ( keyFieldMetaData.value("Action") == "AND" )
+            else if ( metaDataAtIndex.value("Action") == "AND" )
             {
                 return false;
             }
 
-            if(keyFieldMetaData.value("Tick Label") == true)
+            if(metaDataAtIndex.value("Tick Label") == true)
             {
                 if(!tickLabel.isEmpty())
                     tickLabel.append("-");
@@ -395,20 +397,20 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QJsonArray event
 
 bool axis_handler::isActionVisible(QVariantMap &selectionData, QList<QVariantMap> &metaData)
 {
-    for(int measurementMetaDataIndex = 0; measurementMetaDataIndex < metaData.size(); measurementMetaDataIndex++)
+    for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
     {
-        QVariantMap& keyFieldMetaData = metaData[measurementMetaDataIndex];
+        QVariantMap metaDataAtIndex = metaData.at(metaDataIndex);
 
-        if( (keyFieldMetaData.value("Series") == selectionData.value("Series")) &&
-            (keyFieldMetaData.value("Measurement") == selectionData.value("Measurement")) )
+        if( (metaDataAtIndex.value("Series") == selectionData.value("Series")) &&
+            (metaDataAtIndex.value("Measurement") == selectionData.value("Measurement")) )
         {
-            QList<QVariant> uniqueEventMetaData = keyFieldMetaData.value("Unique Event Meta Data").toList();
+            QList<QVariant> uniqueEventMetaData = metaDataAtIndex.value("Unique Event Meta Data").toList();
 
             //qDebug() << selectionData.value("Series") << selectionData.value("Measurement") << selectionData.value("Key Field") << selectionData.value("Key Value");
 
             for(int uniqueEventMetaDataIndex = 0; uniqueEventMetaDataIndex < uniqueEventMetaData.size(); uniqueEventMetaDataIndex++)
             {
-                QVariantMap mData = uniqueEventMetaData[uniqueEventMetaDataIndex].toMap();
+                QVariantMap mData = uniqueEventMetaData.at(uniqueEventMetaDataIndex).toMap();
 
                 if( (mData.value("Key Value") == selectionData.value("Key Value")) && (mData.value("Key Field") == selectionData.value("Key Field")) )
                     return mData.value("Active").toBool();
@@ -434,29 +436,29 @@ void axis_handler::toggleKeyValueVisibleInList(QVariantMap &selectionData, QList
 
             for(int uniqueEventMetaDataIndex = 0; uniqueEventMetaDataIndex < uniqueEventMetaData.size(); uniqueEventMetaDataIndex++)
             {
-                QVariantMap mData = uniqueEventMetaData.value(uniqueEventMetaDataIndex).toMap();
+                QVariantMap uniqueEventMetaDataAtIndex = uniqueEventMetaData.value(uniqueEventMetaDataIndex).toMap();
                 //qDebug() << mData;
 
                 if(selectionData.value("Key Value") == "****")
                 {
-                    mData["Active"] = true;
+                    uniqueEventMetaDataAtIndex["Active"] = true;
                 }
                 else if (selectionData.value("Key Value") == "    ")
                 {
-                    mData["Active"] = false;
+                    uniqueEventMetaDataAtIndex["Active"] = false;
                 }
-                else if( mData.value("Key Value") == selectionData.value("Key Value") )
+                else if( uniqueEventMetaDataAtIndex.value("Key Value") == selectionData.value("Key Value") )
                 {
-                    if(mData.value("Active") == true)
+                    if(uniqueEventMetaDataAtIndex.value("Active") == true)
                     {
-                        mData["Active"] = false;
+                        uniqueEventMetaDataAtIndex["Active"] = false;
                     }
                     else
                     {
-                        mData["Active"] = true;
+                        uniqueEventMetaDataAtIndex["Active"] = true;
                     }
                 }
-                uniqueEventMetaData[uniqueEventMetaDataIndex] = mData;
+                uniqueEventMetaData[uniqueEventMetaDataIndex] = uniqueEventMetaDataAtIndex;
             }
             keyFieldMetaData["Unique Event Meta Data"] = uniqueEventMetaData;
         }
@@ -470,19 +472,19 @@ void axis_handler::toggleKeyFieldVisibleInList(QVariantMap &selectionData, QList
 
     for(int measurementMetaDataIndex = 0; measurementMetaDataIndex < metaData.size(); measurementMetaDataIndex++)
     {
-        QVariantMap& keyFieldMetaData = metaData[measurementMetaDataIndex];
+        QVariantMap& metaDataAtIndex = metaData[measurementMetaDataIndex];
 
-        if( (keyFieldMetaData.value("Series") == selectionData.value("Series")) &&
-            (keyFieldMetaData.value("Measurement") == selectionData.value("Measurement")) &&
-            (keyFieldMetaData.value("Key Field") == selectionData.value("Key Field")) )
+        if( (metaDataAtIndex.value("Series") == selectionData.value("Series")) &&
+            (metaDataAtIndex.value("Measurement") == selectionData.value("Measurement")) &&
+            (metaDataAtIndex.value("Key Field") == selectionData.value("Key Field")) )
         {
-            if(keyFieldMetaData.value("Tick Label").toBool())
+            if(metaDataAtIndex.value("Tick Label").toBool())
             {
-                keyFieldMetaData["Tick Label"] = false;
+                metaDataAtIndex["Tick Label"] = false;
             }
             else
             {
-                keyFieldMetaData["Tick Label"] = true;
+                metaDataAtIndex["Tick Label"] = true;
             }
         }
     }
@@ -534,4 +536,17 @@ void axis_handler::setAxesSelected(QCustomPlot *customPlot, QCPAxis::AxisType ty
         setAxisSelected(customPlot->axisRect()->axis(type, axisIndex));
         axisIndex++;
     }
+}
+
+void axis_handler::setAxisType(QCPAxis *axis, tickerType type)
+{
+    //Plot is current of type Date Time, switch to Numeric
+    if(type == fixed && axis->ticker().dynamicCast<QCPAxisTickerFixed>().isNull())
+    {
+        QSharedPointer<QCPAxisTickerFixed> ticker(new QCPAxisTickerFixed);
+        ticker->setScaleStrategy(QCPAxisTickerFixed::ssMultiples);
+        axis->setTicker(ticker);
+    }
+    else if (type == dateTime && axis->ticker().dynamicCast<QCPAxisTickerDateTime>().isNull())
+        axis->setTicker(QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime));
 }

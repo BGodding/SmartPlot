@@ -20,7 +20,7 @@ QCPGraph *plot_handler::addPlotLine(QVector<QVector<double> > &dataVector, QVari
     bool ok;
     int dataKeyColumn = metaData.value("Data Key Storage Index").toInt(&ok);
     int dataValueColumn = metaData.value("Data Value Storage Index").toInt(&ok);
-    qDebug() << dataKeyColumn << dataValueColumn;
+    //qDebug() << dataKeyColumn << dataValueColumn;
 
     QVector<double> reducedKeyData, reducedValueData;
     int dataPoint;
@@ -70,10 +70,11 @@ QCPGraph *plot_handler::addPlotLine(QVector<double> &key, QVector<double> &value
     QPen graphPen;
     generatePenColor(&graphPen);
     newPlot->setPen(setPenAlpha(graphPen, 192));
-    QCPSelectionDecorator *selectionDecorator = newPlot->selectionDecorator();
-    graphPen.setWidth(2);
-    selectionDecorator->setPen(graphPen);
-    newPlot->setSelectionDecorator(selectionDecorator);
+    // With hardware acceleration we can now use the default selection pen
+//    QCPSelectionDecorator *selectionDecorator = newPlot->selectionDecorator();
+//    graphPen.setWidth(2);
+//    selectionDecorator->setPen(graphPen);
+//    newPlot->setSelectionDecorator(selectionDecorator);
 
     return newPlot;
 }
@@ -92,9 +93,10 @@ QCPGraph *plot_handler::addPlotLine(QCPGraphDataContainer *dataMap, QString name
     QPen graphPen;
     generatePenColor(&graphPen);
     newPlot->setPen(setPenAlpha(graphPen, 192));
-    QCPSelectionDecorator *selectionDecorator = newPlot->selectionDecorator();
-    selectionDecorator->setPen(graphPen);
-    newPlot->setSelectionDecorator(selectionDecorator);
+    // With hardware acceleration we can now use the default selection pen
+//    QCPSelectionDecorator *selectionDecorator = newPlot->selectionDecorator();
+//    selectionDecorator->setPen(graphPen);
+//    newPlot->setSelectionDecorator(selectionDecorator);
 
     ah.updateGraphAxes(plot);
 

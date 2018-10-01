@@ -12,8 +12,11 @@ TARGET = smartplot
 
 #uncomment out the lines below to build with mobile/touch support
 #DEFINES += MOBILE
+DEFINES += QCUSTOMPLOT_USE_OPENGL
 QMAKE_INFO_PLIST = Info.plist
 OTHER_FILES += Info.plist
+
+LIBS += opengl32.lib
 
 TEMPLATE = app
 
@@ -35,8 +38,8 @@ SOURCES += main.cpp \
     text_helper.cpp \
     utility.cpp \
     datahandlers/csv_handler.cpp \
-    datahandlers/cloc_handler.cpp \
     datahandlers/influxdb_handler.cpp \
+    datahandlers/git_cloc_handler.cpp \
     tabs/plot/axis_handler.cpp \
     tabs/plot/plot_analytics.cpp \
     tabs/plot/plot_handler.cpp \
@@ -51,8 +54,8 @@ HEADERS += \
     utility.h \
     ios/iOSFileOpener.h \
     datahandlers/csv_handler.h \
-    datahandlers/cloc_handler.h \
     datahandlers/influxdb_handler.h \
+    datahandlers/git_cloc_handler.h \
     tabs/plot/axis_handler.h \
     tabs/plot/plot_analytics.h \
     tabs/plot/plot_handler.h \

@@ -9,7 +9,7 @@ class myUrlHandler : public QObject
 {   Q_OBJECT
 
 public:
-    myUrlHandler(QObject *parent = nullptr) : QObject(parent){}
+    myUrlHandler(QObject *parent = 0) : QObject(parent){}
     ~ myUrlHandler(){}
 
 public slots:

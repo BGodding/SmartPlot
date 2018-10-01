@@ -82,7 +82,7 @@ void plot_interface::selectionChanged(QCustomPlot *customPlot)
 void plot_interface::addToContextMenu(QMenu *menu, QCustomPlot* plot)
 {
     QVariantMap metaDataMap;
-    metaDataMap["Active Plot"] = qVariantFromValue(static_cast <void *>(plot));
+    metaDataMap["Active Plot"] = qVariantFromValue( static_cast <void *>(plot));
 
     //If a plot is selected show the modify plot menu
     if( ( plot->selectedPlottables().size() > 0 ) || (plot->selectedItems().size() > 0 ) || ah.isAxisSelected(plot, QCPAxis::atLeft) || ah.isAxisSelected(plot, QCPAxis::atRight) )
@@ -94,9 +94,16 @@ void plot_interface::addToContextMenu(QMenu *menu, QCustomPlot* plot)
                          this, SLOT(selected_remove()) )->setData(metaDataMap);
     }
 
+    //If the xAxis is selected show the modify plot menu
+    //TODO: Something here
+    if( ((plot->graphCount() > 0) && (plot->selectedItems().size() > 0 )) || ah.isAxisSelected(plot, QCPAxis::atBottom))
+    {
+        menu->addAction( QIcon(":/graphics/axes.png"),       tr("Toggle Axis Format"),
+                         this, SLOT(selected_remove()) )->setData(metaDataMap);
+    }
+
     if ( plot->selectedPlottables().size() > 0 )
     {
-        //TODO: This needs to become submenu to support unlimited axes
         QMenu *axesUnitsMenu = menu->addMenu (QIcon(":/graphics/axes.png"), tr("Axes") );
 
         int axisIndex = 0;
@@ -179,10 +186,8 @@ void plot_interface::addToContextMenu(QMenu *menu, QCustomPlot* plot)
             //Add submenu for convert plot
             QMenu *convertPlotMenu = menu->addMenu (QIcon(":/graphics/periodic.png"), tr("Convert to periodic") );
             //selectionData.clear();
-            QSettings settings;
 
-            plot_interface::tickerType currentLabelType = static_cast<plot_interface::tickerType>(settings.value("X Axis Tick Label Format", plot_interface::dateTime).toInt());
-            if(currentLabelType==plot_interface::dateTime)
+            if(!plot->xAxis->ticker().dynamicCast<QCPAxisTickerDateTime>().isNull())
             {
                 metaDataMap["Interval Value"] = 1;
 
@@ -610,9 +615,9 @@ void plot_interface::selected_modifyData()
                     //populate QScriptValueList with data from each graph for the plotFunction call
                     for(int graph = 0 ; graph < graphData.size() ; graph++)
                     {
-                        QCPGraphDataContainer::const_iterator refIterator = graphData.value(graph);
-                        QCPGraph* currentGraph =  qobject_cast<QCPGraph*>(activePlot->selectedPlottables().value(graph));
-                        plot_analytics plotAnalytics;
+//                        QCPGraphDataContainer::const_iterator refIterator = graphData.value(graph);
+//                        QCPGraph* currentGraph =  qobject_cast<QCPGraph*>(activePlot->selectedPlottables().value(graph));
+//                        plot_analytics plotAnalytics;
                         //TODO: QCP2 Fix
 //                        if(plotAnalytics.nearestByKeyValue(graphData.first(), currentGraph, &refIterator))
 //                        {

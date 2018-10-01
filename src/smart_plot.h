@@ -5,8 +5,8 @@
 
 //Data Handlers: Add header files here
 #include "datahandlers/csv_handler.h"
-#include "datahandlers/cloc_handler.h"
 #include "datahandlers/influxdb_handler.h"
+#include "datahandlers/git_cloc_handler.h"
 
 #include "ios/iOSFileOpener.h"
 
@@ -81,8 +81,8 @@ private:
     plot_interface plotInterface;
     axis_handler axisHandler;
     csv_handler csvHandler;
-    cloc_handler clocHandler;
     influxdb_handler influxdbHandler;
+    git_cloc_handler gitClocHandler;
 
     QMenu *contextMenu;
 

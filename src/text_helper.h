@@ -1,6 +1,7 @@
 #ifndef TEXT_HELPER
 #define TEXT_HELPER
 
+#include <QObject>
 #include <QTextStream>
 #include <QDateTime>
 #include <QMenu>
@@ -19,7 +20,7 @@ public:
     int versionStringToInt(QString version);
     QString versionIntToString(int version);
     bool isVersionOk(QString minVersion, QString maxVersion, QString readVersion);
-    qint64 estimateLineCount( QString fileName );
+    int estimateLineCount( QString fileName );
 
     void insertDataBreak(double dateTime, QVector<QVector<double> > &seriesData, QVector<QVector<QString> > &eventData, QList<QVariantMap> &metaData);
 };

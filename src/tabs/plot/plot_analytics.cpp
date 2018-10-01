@@ -203,7 +203,7 @@ void plot_analytics::clearUnwantedPoints(QCPGraph *target, QCPGraph *enableRefer
         if (!valueEnableRange.contains(refIterator->value))
             plotIterator->value = std::numeric_limits<double>::quiet_NaN();
 
-        plotIterator++;
+        ++plotIterator;
     }
 }
 

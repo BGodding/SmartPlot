@@ -164,7 +164,7 @@ bool text_helper::isVersionOk(QString minVersion, QString maxVersion, QString re
         return false;
 }
 
-qint64 text_helper::estimateLineCount( QString fileName )
+int text_helper::estimateLineCount( QString fileName )
 {
     QFile file(fileName);
     qint64 fileStartingPosition = 0;
@@ -189,7 +189,7 @@ qint64 text_helper::estimateLineCount( QString fileName )
         if(lineCount < 150)
             return lineCount;
         else
-            return (file.size() * 100) / byteCount;
+            return int((file.size() * 100) / byteCount);
     }
     return 0;
 }

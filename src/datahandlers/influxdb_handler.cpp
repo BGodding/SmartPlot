@@ -14,8 +14,9 @@ influxdb_handler::influxdb_handler()
     influxAddress = settings.value("Influx DB Host").toString();
 }
 
-void influxdb_handler::addToSystemMenu(QMenu *menu)
+void influxdb_handler::addToSystemMenu(QMenu *menu, QCustomPlot* plot)
 {
+    Q_UNUSED(plot);
     QMenu *influxdbHandlerMenu = menu->addMenu( tr("Influx DB") );
 
     influxdbHandlerMenu->addAction( QIcon(":/graphics/cloudRefresh.png"), tr("&Refresh"), this, SLOT(menuRefresh()) );

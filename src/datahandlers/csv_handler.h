@@ -15,8 +15,8 @@ class csv_handler : public QObject
 public:
     csv_handler();
 
-    void addToSystemMenu(QMenu *menu);
-    QPushButton *addToMessageBox(QMessageBox &msgBox);
+    void addToSystemMenu(QMenu *menu, QCustomPlot* plot);
+    QPushButton *addToMessageBox(QMessageBox &msgBox, QCustomPlot* plot);
     void addToContextMenu(QMenu *menu, QCustomPlot* plot);
     void dataImport(QVariantMap modifier);
 

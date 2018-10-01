@@ -17,7 +17,7 @@ class influxdb_handler : public QObject
 public:
     influxdb_handler();
 
-    void addToSystemMenu(QMenu *menu);
+    void addToSystemMenu(QMenu *menu, QCustomPlot* plot);
     void addToContextMenu(QMenu *menu, QCustomPlot* plot);
     void close();
 //    void dataImport(QVariantMap modifier);

@@ -21,19 +21,21 @@ smart_plot::smart_plot(QWidget *parent) :
     this->resize(1024, 600);
     this->installEventFilter(this);
 
+    plots.append(new QCustomPlot(this));
+
     //Setup the main menu
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
 
     //Data Handlers: Add menu calls here
-    csvHandler.addToSystemMenu(fileMenu);
-    clocHandler.addToSystemMenu(fileMenu);
-
-    fileMenu->addSeparator();
+    csvHandler.addToSystemMenu(fileMenu, activePlot());  
+    gitClocHandler.addToSystemMenu(fileMenu, activePlot());
+    //influxdbHandler.addToSystemMenu(fileMenu, activePlot());
 
     fileMenu->addSeparator();
     fileMenu->addAction( QIcon(":/graphics/savePlot.png"), tr("&SaveImage"), this, SLOT(savePlotAsImage()) );
 
-    plots.append(new QCustomPlot(this));
+
+    activePlot()->setOpenGl(true,16);
 
     setCentralWidget(activePlot());
 
@@ -334,7 +336,7 @@ void smart_plot::contextMenuRequest(QPoint pos)
     plotInterface.addToContextMenu(contextMenu, activePlot());
 
     csvHandler.addToContextMenu(contextMenu, activePlot());
-    clocHandler.addToContextMenu(contextMenu, activePlot());
+    gitClocHandler.addToContextMenu(contextMenu, activePlot());
 
     contextMenu->addSeparator();
     influxdbHandler.addToContextMenu(contextMenu, activePlot());
@@ -377,18 +379,15 @@ void smart_plot::axisDoubleClick(QCPAxis *axis, QCPAxis::SelectablePart part)
             activePlot()->replot();
         }
     }
-    else if (part == QCPAxis::spTickLabels)
+    else if (part == QCPAxis::spTickLabels && axis->axisType() == QCPAxis::atBottom)
     {
-        QSettings settings;
-        plot_interface::tickerType currentLabelType = static_cast<plot_interface::tickerType>(settings.value("X Axis Tick Label Format", plot_interface::dateTime).toInt());
-        plot_interface::tickerType newLabelType;
+        //Plot is current of type Date Time, switch to Numeric
+        if(axis->ticker().dynamicCast<QCPAxisTickerFixed>().isNull())
+            axisHandler.setAxisType(axis, axis_handler::fixed);
+        else
+            axisHandler.setAxisType(axis, axis_handler::dateTime);
 
-        if(currentLabelType == plot_interface::dateTime)
-            newLabelType = plot_interface::fixed;
-        else// if(currentAxisType == plot_interface::fixed)
-            newLabelType = plot_interface::dateTime;
-
-        settings.setValue("X Axis Tick Label Format", newLabelType);
+        axisHandler.updateAxisTickCount(activePlot(), this->window());
         axisHandler.updateGraphAxes(activePlot());
     }
 }
@@ -434,7 +433,7 @@ bool smart_plot::eventFilter(QObject* object,QEvent* event)
         msgBox.setText(tr("Plase select the file type"));
         msgBox.setInformativeText(modifier.value("File Name").toString());
 
-        QPushButton *dataFileButton = csvHandler.addToMessageBox(msgBox);
+        QPushButton *dataFileButton = csvHandler.addToMessageBox(msgBox, activePlot());
 
         msgBox.exec();
 
@@ -492,29 +491,7 @@ bool smart_plot::eventFilter(QObject* object,QEvent* event)
 void smart_plot::resizeEvent(QResizeEvent* event)
 {
     Q_UNUSED(event);
-    //qDebug() << "Pixel Ratio:" << devicePixelRatio() << this->width();
-    //Account for higher DPI on mobile
-    #ifdef MOBILE
-
-    int buttonHeight = 60/devicePixelRatio();
-    int buttonWidth = 120/devicePixelRatio();
-
-    activePlot()->xAxis->setAutoTickCount(this->width()*devicePixelRatio()/250);
-
-    QSize screenSize = QApplication::primaryScreen()->availableSize();
-
-    QList<QPushButton *> allPButtons = this->findChildren<QPushButton *>("+");
-
-    if(!allPButtons.isEmpty())
-        allPButtons.first()->setGeometry( (screenSize.width()-buttonWidth), (screenSize.height()-buttonHeight), buttonWidth, buttonHeight);
-
-    allPButtons = this->findChildren<QPushButton *>("-");
-
-    if(!allPButtons.isEmpty())
-        allPButtons.first()->setGeometry( 0, (screenSize.height()-buttonHeight), buttonWidth, buttonHeight );
-    #else
-    //activePlot()->xAxis->setAutoTickCount(this->width()/200);
-    #endif
+    axisHandler.updateAxisTickCount(activePlot(), this->window());
 }
 
 void smart_plot::closeEvent(QCloseEvent *)
