@@ -12,7 +12,7 @@ smart_plot::smart_plot(QWidget *parent) :
     QDesktopServices::setUrlHandler("file", myHandler, "files");
     connect(myHandler, SIGNAL(openFile(const QString&)), this, SLOT( iosOpen(const QString &)));
 
-    setWindowTitle(tr("Smartplot Ver 2.01.005"));
+    setWindowTitle(tr("Smartplot Ver 2.02.001"));
 
     QCoreApplication::setOrganizationName("bgodding");
     QCoreApplication::setApplicationName("smartplot");
@@ -165,6 +165,7 @@ void smart_plot::initGraph(QCustomPlot *customPlot)
     // make bottom x axis transfer its ranges to top x axis which is used for showing events
     connect(customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->xAxis2, SLOT(setRange(QCPRange)));
 
+    axisHandler.setAxisType(customPlot->xAxis, axis_handler::fixed);
     //Short Cuts!
     //Rescale to first selected plot
     //new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_R), this, SLOT(close()));
@@ -289,12 +290,16 @@ void smart_plot::mousePress(QMouseEvent *event)
                                     "<tr>" "<th colspan=\"2\">%L1</th>"  "</tr>"
                                     "<tr>" "<td>X:</td>"   "<td>%L2</td>" "</tr>"
                                     "<tr>" "<td>Y:</td>"   "<td>%L3</td>" "</tr>"
-                                    "<tr>" "<td>AVG:</td>" "<td>%L4</td>" "</tr>"
+                                    "<tr>" "<td>Min:</td>" "<td>%L4</td>" "</tr>"
+                                    "<tr>" "<td>Avg:</td>" "<td>%L5</td>" "</tr>"
+                                    "<tr>" "<td>Max:</td>" "<td>%L6</td>" "</tr>"
                                    "</table>").
                                arg(graph->name().isEmpty() ? "..." : graph->name()).
                                arg(dateTime.toString(qSharedPointerDynamicCast<QCPAxisTickerDateTime>(graph->keyAxis()->ticker())->dateTimeFormat())).
                                arg(value).
-                               arg(stats.avgValue),
+                               arg(stats.minValue).
+                               arg(stats.avgValue).
+                               arg(stats.maxValue),
                                activePlot(), activePlot()->rect());
                         }
                     }
@@ -305,12 +310,16 @@ void smart_plot::mousePress(QMouseEvent *event)
                                 "<tr>" "<th colspan=\"2\">%L1</th>"  "</tr>"
                                 "<tr>" "<td>X:</td>"   "<td>%L2</td>" "</tr>"
                                 "<tr>" "<td>Y:</td>"   "<td>%L3</td>" "</tr>"
-                                "<tr>" "<td>AVG:</td>" "<td>%L4</td>" "</tr>"
+                                "<tr>" "<td>Min:</td>" "<td>%L4</td>" "</tr>"
+                                "<tr>" "<td>Avg:</td>" "<td>%L5</td>" "</tr>"
+                                "<tr>" "<td>Max:</td>" "<td>%L6</td>" "</tr>"
                                "</table>").
                            arg(graph->name().isEmpty() ? "..." : graph->name()).
                            arg(mouseKey).
                            arg(value).
-                           arg(stats.avgValue),
+                           arg(stats.minValue).
+                           arg(stats.avgValue).
+                           arg(stats.maxValue),
                            activePlot(), activePlot()->rect());
                     }
                 }
@@ -381,12 +390,7 @@ void smart_plot::axisDoubleClick(QCPAxis *axis, QCPAxis::SelectablePart part)
     }
     else if (part == QCPAxis::spTickLabels && axis->axisType() == QCPAxis::atBottom)
     {
-        //Plot is current of type Date Time, switch to Numeric
-        if(axis->ticker().dynamicCast<QCPAxisTickerFixed>().isNull())
-            axisHandler.setAxisType(axis, axis_handler::fixed);
-        else
-            axisHandler.setAxisType(axis, axis_handler::dateTime);
-
+        axisHandler.toggleAxisType(axis);
         axisHandler.updateAxisTickCount(activePlot(), this->window());
         axisHandler.updateGraphAxes(activePlot());
     }

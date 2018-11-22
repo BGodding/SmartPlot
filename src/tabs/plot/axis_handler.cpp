@@ -508,6 +508,17 @@ bool axis_handler::isAxisSelected(QCustomPlot* plot, QCPAxis::AxisType AxisTypes
     return false;
 }
 
+bool axis_handler::isAxisSelected(QCustomPlot* plot, QCPAxis::AxisType AxisTypes, QCPAxis::SelectablePart part)
+{
+    for(int axis = 0 ; axis < plot->selectedAxes().size() ; axis++)
+    {
+        if( (plot->selectedAxes().value(axis)->axisType() == AxisTypes) &&
+                (plot->selectedAxes().value(axis)->selectedParts() & part))
+            return true;
+    }
+    return false;
+}
+
 bool axis_handler::isAxisTypeSelected(QCustomPlot *customPlot, QCPAxis::AxisType type)
 {
     int axisIndex = 0;
@@ -526,6 +537,16 @@ bool axis_handler::isAxisTypeSelected(QCustomPlot *customPlot, QCPAxis::AxisType
 void axis_handler::setAxisSelected(QCPAxis* axis)
 {
     axis->setSelectedParts(QCPAxis::spAxis|QCPAxis::spTickLabels);
+}
+
+void axis_handler::setAxesSelected(QList<QCPAxis*> axis)
+{
+    int axisIndex = 0;
+    while(axisIndex < axis.size())
+    {
+        axis.at(axisIndex)->setSelectedParts(QCPAxis::spAxis|QCPAxis::spTickLabels);
+        axisIndex++;
+    }
 }
 
 void axis_handler::setAxesSelected(QCustomPlot *customPlot, QCPAxis::AxisType type)
@@ -549,4 +570,13 @@ void axis_handler::setAxisType(QCPAxis *axis, tickerType type)
     }
     else if (type == dateTime && axis->ticker().dynamicCast<QCPAxisTickerDateTime>().isNull())
         axis->setTicker(QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime));
+}
+
+void axis_handler::toggleAxisType(QCPAxis *axis)
+{
+    //Plot is current of type Date Time, switch to Numeric
+    if(axis->ticker().dynamicCast<QCPAxisTickerFixed>().isNull())
+        setAxisType(axis, axis_handler::fixed);
+    else
+        setAxisType(axis, axis_handler::dateTime);
 }

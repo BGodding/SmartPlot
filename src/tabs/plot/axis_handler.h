@@ -30,11 +30,14 @@ public:
 
     bool isAxisSelected(QCPAxis* axis);
     bool isAxisSelected(QCustomPlot* plot, QCPAxis::AxisType AxisTypes);
+    bool isAxisSelected(QCustomPlot* plot, QCPAxis::AxisType AxisTypes, QCPAxis::SelectablePart part);
     bool isAxisTypeSelected(QCustomPlot *customPlot, QCPAxis::AxisType type);
 
     void setAxisSelected(QCPAxis* axis);
+    void setAxesSelected(QList<QCPAxis*> axis);
     void setAxesSelected(QCustomPlot *plot, QCPAxis::AxisType type);
     void setAxisType(QCPAxis *axis, tickerType type);
+    void toggleAxisType(QCPAxis *axis);
 };
 
 #endif // AXIS_HANDLER

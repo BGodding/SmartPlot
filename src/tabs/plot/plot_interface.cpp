@@ -46,7 +46,13 @@ void plot_interface::selectionChanged(QCustomPlot *customPlot)
         customPlot->axisRect()->setRangeZoomAxes(customPlot->xAxis, customPlot->selectedAxes().first());
         customPlot->axisRect()->setRangeDragAxes(customPlot->xAxis, customPlot->selectedAxes().first());
     }
-
+    else
+    {
+        customPlot->axisRect()->setRangeZoomAxes(customPlot->axisRect()->axes());
+        customPlot->axisRect()->setRangeDragAxes(customPlot->axisRect()->axes());
+    }
+    QList<QCPAxis*> selectedAxes;
+    selectedAxes.append(customPlot->xAxis);
     // synchronize selection of plottables with selection of corresponding legend items
     for (int i=0; i<customPlot->plottableCount(); ++i)
     {
@@ -68,13 +74,18 @@ void plot_interface::selectionChanged(QCustomPlot *customPlot)
         {
             plottable->setPen(setPenAlpha(plottable->pen(), 192));
         }
+
+        if (plottable->selected())
+        {
+            selectedAxes.append(plottable->valueAxis());
+        }
     }
 
     //If any plot is selected makes sure drag and zoom uses that plots axes
     if (customPlot->selectedPlottables().size() > 0)
     {
-        customPlot->axisRect()->setRangeDragAxes(customPlot->xAxis, customPlot->selectedPlottables().first()->valueAxis());
-        customPlot->axisRect()->setRangeZoomAxes(customPlot->xAxis, customPlot->selectedPlottables().first()->valueAxis());
+        customPlot->axisRect()->setRangeZoomAxes(selectedAxes);
+        customPlot->axisRect()->setRangeDragAxes(selectedAxes);
     }
 }
 
@@ -95,11 +106,10 @@ void plot_interface::addToContextMenu(QMenu *menu, QCustomPlot* plot)
     }
 
     //If the xAxis is selected show the modify plot menu
-    //TODO: Something here
-    if( ((plot->graphCount() > 0) && (plot->selectedItems().size() > 0 )) || ah.isAxisSelected(plot, QCPAxis::atBottom))
+    if( ((plot->graphCount() > 0) && (plot->selectedItems().size() > 0 )) || ah.isAxisSelected(plot, QCPAxis::atBottom, QCPAxis::spTickLabels))
     {
         menu->addAction( QIcon(":/graphics/axes.png"),       tr("Toggle Axis Format"),
-                         this, SLOT(selected_remove()) )->setData(metaDataMap);
+                         this, SLOT(toggleAxisType()) )->setData(metaDataMap);
     }
 
     if ( plot->selectedPlottables().size() > 0 )
@@ -512,6 +522,21 @@ void plot_interface::removeAll()
     }
 }
 
+void plot_interface::toggleAxisType()
+{
+    // make sure this slot is really called by a context menu action, so it carries the data we need
+    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    {
+        QVariantMap metaDataMap = contextAction->data().toMap();
+
+        QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
+
+        ah.toggleAxisType(activePlot->xAxis);
+        //ah.updateAxisTickCount(activePlot, this->parent());
+        ah.updateGraphAxes(activePlot);
+    }
+}
+
 void plot_interface::selectedPlot_convert()
 {
     if (QAction* contextAction = qobject_cast<QAction*>(sender()))
@@ -530,6 +555,7 @@ void plot_interface::selectedPlot_convert()
 }
 
 //Turns out the first user selected plot is the last in the selected list....
+//TODO: This currently uses the first selected plot to drive point intervals, should probably pick the one with the most points..
 void plot_interface::selected_modifyData()
 {
     if (QAction* contextAction = qobject_cast<QAction*>(sender()))
@@ -615,18 +641,17 @@ void plot_interface::selected_modifyData()
                     //populate QScriptValueList with data from each graph for the plotFunction call
                     for(int graph = 0 ; graph < graphData.size() ; graph++)
                     {
-//                        QCPGraphDataContainer::const_iterator refIterator = graphData.value(graph);
-//                        QCPGraph* currentGraph =  qobject_cast<QCPGraph*>(activePlot->selectedPlottables().value(graph));
-//                        plot_analytics plotAnalytics;
-                        //TODO: QCP2 Fix
-//                        if(plotAnalytics.nearestByKeyValue(graphData.first(), currentGraph, &refIterator))
-//                        {
-//                            plotValue << refIterator->value;
-//                        }
-//                        else
-//                            plotValue << 0;
+                        QCPGraph* currentGraph =  qobject_cast<QCPGraph*>(activePlot->selectedPlottables().value(graph));
+                        QCPGraphDataContainer::const_iterator refIterator = currentGraph->data().data()->findBegin(x.last(), false);
+                        if(refIterator != currentGraph->data().data()->constEnd())
+                        {
+                            plotValue << refIterator->value;
+                        }
+                        else
+                        {
+                            plotValue << 0;
+                        }
 
-                        //plotValue << graphData.value(graph).value().value;
                         graphData[graph]++;
                     }
                     //Make sure the result is not infinite or non-existant

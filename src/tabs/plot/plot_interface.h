@@ -27,6 +27,7 @@ public slots:
     void selectedPlot_convertUnits();
     void selectedPlot_convert();
     void removeAll();
+    void toggleAxisType();
 
 private:
     axis_handler ah;
