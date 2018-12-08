@@ -5,29 +5,26 @@
 #include <QDebug>
 #include <utility>
 
-QString text_helper::autoDetectDelimiter(QTextStream& stream)
+QString text_helper::autoDetectDelimiter(QTextStream &stream)
 {
-    const QString delimiters[]={"\t", ",", " "};
+    const QString delimiters[] = {"\t", ",", " "};
     qint64 streamStartingPosition = stream.pos();
     QVector<QString> possibleDelimiters;
     QString line = QString();
     QStringList strings;
     int i;
 
-    while (!stream.atEnd() && (possibleDelimiters.size()!=1))
-    {
+    while (!stream.atEnd() && (possibleDelimiters.size() != 1)) {
         line = QString(stream.readLine());
         possibleDelimiters.clear();
 
         if (line.isEmpty())
             continue;
 
-        for(i=0;i<3;i++)
-        {
+        for (i = 0; i < 3; i++) {
             strings.clear();
             strings = line.split(delimiters[i]);
-            if( strings.size() != 1 )
-            {
+            if ( strings.size() != 1 ) {
                 possibleDelimiters.append(delimiters[i]);
             }
         }
@@ -37,8 +34,7 @@ QString text_helper::autoDetectDelimiter(QTextStream& stream)
     //Reposition the stream
     stream.seek(streamStartingPosition);
 
-    if(!possibleDelimiters.empty())
-    {
+    if (!possibleDelimiters.empty()) {
         return possibleDelimiters.first();
     }
 
@@ -46,7 +42,7 @@ QString text_helper::autoDetectDelimiter(QTextStream& stream)
     return delimiters[0];
 }
 
-bool text_helper::firstColumnIsIncrimental(QTextStream& stream, const QString& delimiter)
+bool text_helper::firstColumnIsIncrimental(QTextStream &stream, const QString &delimiter)
 {
     qint64 streamStartingPosition = stream.pos();
     double firstColumnValue, prevFirstColumnValue = 0;
@@ -58,16 +54,14 @@ bool text_helper::firstColumnIsIncrimental(QTextStream& stream, const QString& d
     //Read out the first line (possibly header)
     line = QString(stream.readLine());
 
-    while (!stream.atEnd())
-    {
+    while (!stream.atEnd()) {
         line = QString(stream.readLine());
         QStringList strings = line.split(delimiter);
 
         //Lets determine if we can use the first column as an X-axis
         firstColumnValue = strings.value(0).toDouble(&ok);
 
-        if(!ok || (firstColumnValue < prevFirstColumnValue))
-        {
+        if (!ok || (firstColumnValue < prevFirstColumnValue)) {
             firstColumnIsIncrimental = false;
             break;
         }
@@ -81,7 +75,7 @@ bool text_helper::firstColumnIsIncrimental(QTextStream& stream, const QString& d
     return firstColumnIsIncrimental;
 }
 
-QString text_helper::cleanDateTimeString(const QString& rawDate, const QString& rawTime)
+QString text_helper::cleanDateTimeString(const QString &rawDate, const QString &rawTime)
 {
     //Really dumb, but the best thing I can think of :/
     QString workString = " ";
@@ -99,7 +93,8 @@ QString text_helper::cleanDateTimeString(const QString& rawDate, const QString& 
     return workString;
 }
 
-void text_helper::checkAndProcessColumnHeaders( QTextStream& stream, const QString& delimiter, QList<QVariantMap> &metaData, int firstDataColumn  )
+void text_helper::checkAndProcessColumnHeaders( QTextStream &stream, const QString &delimiter,
+                                                QList<QVariantMap> &metaData, int firstDataColumn  )
 {
     qint64 streamStartingPosition = stream.pos();
 
@@ -110,34 +105,28 @@ void text_helper::checkAndProcessColumnHeaders( QTextStream& stream, const QStri
 
     QVariantMap variantMap;
 
-     //Check if the first line is not a header (only contains spaces, numbers, decimal points)
+    //Check if the first line is not a header (only contains spaces, numbers, decimal points)
     QRegExp re("^[ .0-9]*$");
-    if (re.exactMatch(line))
-    {
+    if (re.exactMatch(line)) {
         //reset stream and return
         stream.seek(streamStartingPosition);
         headerFound = false;
     }
 
-    for(column=firstDataColumn;column<strings.size();column++)
-    {
+    for (column = firstDataColumn; column < strings.size(); column++) {
         variantMap.clear();
-        if(headerFound)
-        {
-            if(strings.value(column).size()!=0)
-            {
+        if (headerFound) {
+            if (strings.value(column).size() != 0) {
                 variantMap["Key Field"] = strings.value(column);
                 variantMap["Data Source"] = column;
             }
-        }
-        else
-        {
+        } else {
             //Use column number as the header
             variantMap["Key Field"] = "";
             variantMap["Data Source"] = column;
         }
 
-        if(!variantMap.isEmpty())
+        if (!variantMap.isEmpty())
             metaData.append(variantMap);
     }
 }
@@ -153,32 +142,31 @@ QString text_helper::versionIntToString(int version)
 {
     //Versions are stored in x.yy.zzz format
     QString versionString = QString::number(version);
-    versionString = versionString.insert(1,".");
-    return versionString.insert(4,".");
+    versionString = versionString.insert(1, ".");
+    return versionString.insert(4, ".");
 }
 
-bool text_helper::isVersionOk(QString minVersion, QString maxVersion, const QString& readVersion)
+bool text_helper::isVersionOk(QString minVersion, QString maxVersion, const QString &readVersion)
 {
-    if( (versionStringToInt(readVersion) <= versionStringToInt(maxVersion)) && (versionStringToInt(readVersion) >= versionStringToInt(minVersion)) )
+    if ( (versionStringToInt(readVersion) <= versionStringToInt(maxVersion))
+            && (versionStringToInt(readVersion) >= versionStringToInt(minVersion)) )
         return true;
     else
         return false;
 }
 
-int text_helper::estimateLineCount( const QString& fileName )
+int text_helper::estimateLineCount( const QString &fileName )
 {
     QFile file(fileName);
     qint64 fileStartingPosition = 0;
     int lineCount = 0;
 
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream textStream(&file);
         textStream.setAutoDetectUnicode(true);
 
-        while (!textStream.atEnd() && (++lineCount < 150) )
-        {
-            if(lineCount == 50)
+        while (!textStream.atEnd() && (++lineCount < 150) ) {
+            if (lineCount == 50)
                 fileStartingPosition = textStream.pos();
 
             textStream.readLine();
@@ -187,32 +175,30 @@ int text_helper::estimateLineCount( const QString& fileName )
 
         file.close();
 
-        if(lineCount < 150)
+        if (lineCount < 150)
             return lineCount;
-        
-            return int((file.size() * 100) / byteCount);
+
+        return int((file.size() * 100) / byteCount);
     }
     return 0;
 }
 
-void text_helper::insertDataBreak(double dateTime, QVector<QVector<double> > &seriesData, QVector<QVector<QString> > &eventData, QList<QVariantMap> &metaData)
+void text_helper::insertDataBreak(double dateTime, QVector<QVector<double> > &seriesData,
+                                  QVector<QVector<QString> > &eventData, QList<QVariantMap> &metaData)
 {
     //Add the date and time
     seriesData.first().append(dateTime);
 
     //Iterate through meta data and append data as needed
-    for(auto & mData : metaData)
-    {
-        if(mData.contains("Data Type"))
-        {
-            if(mData.value("Data Type") == "Series")
-            {
-                seriesData[mData.value("Data Value Storage Index").toInt()].append(std::numeric_limits<double>::quiet_NaN());
+    for (auto &mData : metaData) {
+        if (mData.contains("Data Type")) {
+            if (mData.value("Data Type") == "Series") {
+                seriesData[mData.value("Data Value Storage Index").toInt()].append(
+                    std::numeric_limits<double>::quiet_NaN());
             }
         }
     }
-    if( !eventData.isEmpty() )
-    {
+    if ( !eventData.isEmpty() ) {
         QVector<QString> spacerVector(eventData.first().size());
         eventData.append(spacerVector);
     }

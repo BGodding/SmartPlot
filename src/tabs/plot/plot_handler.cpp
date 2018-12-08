@@ -29,17 +29,14 @@ QCPGraph *plot_handler::addPlotLine(QVector<QVector<double> > &dataVector, QVari
     double endPoint = 0;
     int pointsDropped = 0;
 
-    for(dataPoint=0; dataPoint < dataVector.value(dataValueColumn).size(); dataPoint++)
-    {
+    for (dataPoint = 0; dataPoint < dataVector.value(dataValueColumn).size(); dataPoint++) {
         //This code drops points that dont add anything to the plot. Saves up to 90%+ memory
-        if( (dataPoint > 1) && (dataPoint < dataVector.value(dataValueColumn).size() - 1))
-        {
-            startPoint = dataVector.value(dataValueColumn).value(dataPoint-1);
+        if ( (dataPoint > 1) && (dataPoint < dataVector.value(dataValueColumn).size() - 1)) {
+            startPoint = dataVector.value(dataValueColumn).value(dataPoint - 1);
             midPoint = dataVector.value(dataValueColumn).value(dataPoint);
-            endPoint = dataVector.value(dataValueColumn).value(dataPoint+1);
-            if( (isInvalidData(startPoint) && isInvalidData(midPoint) && isInvalidData(endPoint)) ||
-                ( (startPoint == midPoint) &&  (endPoint == midPoint) ) )
-            {
+            endPoint = dataVector.value(dataValueColumn).value(dataPoint + 1);
+            if ( (isInvalidData(startPoint) && isInvalidData(midPoint) && isInvalidData(endPoint)) ||
+                    ( (startPoint == midPoint) &&  (endPoint == midPoint) ) ) {
                 pointsDropped++;
                 continue;
             }
@@ -49,14 +46,14 @@ QCPGraph *plot_handler::addPlotLine(QVector<QVector<double> > &dataVector, QVari
         //qDebug() << reducedKeyData.last() << reducedValueData.last() << startPoint << midPoint << endPoint << pointsDropped;
     }
 
-    QCustomPlot* customPlot = static_cast <QCustomPlot*>(metaData["Active Plot"].value<void *>());
+    QCustomPlot *customPlot = static_cast <QCustomPlot *>(metaData["Active Plot"].value<void *>());
 
     qDebug() << "dropped" << pointsDropped << "of" << dataVector.value(dataValueColumn).size();
 
     return addPlotLine(reducedKeyData, reducedValueData, metaData.value("Key Field").toString(), customPlot);
 }
 
-QCPGraph *plot_handler::addPlotLine(QVector<double> &key, QVector<double> &value, const QString& name, QCustomPlot *plot)
+QCPGraph *plot_handler::addPlotLine(QVector<double> &key, QVector<double> &value, const QString &name, QCustomPlot *plot)
 {
     //Code here for graphing
     QCPGraph *newPlot = plot->addGraph();
@@ -79,7 +76,7 @@ QCPGraph *plot_handler::addPlotLine(QVector<double> &key, QVector<double> &value
     return newPlot;
 }
 
-QCPGraph *plot_handler::addPlotLine(QCPGraphDataContainer *dataMap, const QString& name, QCustomPlot *plot)
+QCPGraph *plot_handler::addPlotLine(QCPGraphDataContainer *dataMap, const QString &name, QCustomPlot *plot)
 {
     //Code here for graphing
     QCPGraph *newPlot = plot->addGraph();
@@ -105,7 +102,7 @@ QCPGraph *plot_handler::addPlotLine(QCPGraphDataContainer *dataMap, const QStrin
     return newPlot;
 }
 
-void plot_handler::plotConvert( QCPGraph *graph, const QString& functionString )
+void plot_handler::plotConvert( QCPGraph *graph, const QString &functionString )
 {
     QCPGraphDataContainer::iterator plotData = graph->data()->begin();
 
@@ -117,10 +114,8 @@ void plot_handler::plotConvert( QCPGraph *graph, const QString& functionString )
     QJSValue plotFunction = plotEngine.evaluate(scriptString);
     QJSValueList plotValue;
 
-    while( plotData != graph->data()->end() )
-    {
-        if( !isInvalidData(plotData->value) )
-        {
+    while ( plotData != graph->data()->end() ) {
+        if ( !isInvalidData(plotData->value) ) {
             plotValue.clear();
             plotValue << plotData->value;
             plotData->value = plotFunction.call(plotValue).toNumber();
@@ -136,7 +131,7 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
 
     QDateTime currentDataKey_qDateTime = QDateTime::fromTime_t(uint(plotData->key));
 
-    QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaData["Active Plot"].value<void *>());
+    QCustomPlot *activePlot = static_cast <QCustomPlot *>(metaData["Active Plot"].value<void *>());
 
     double currentDataValue = plotData->value;
     double periodStartValue = plotData->value;
@@ -148,37 +143,33 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
 
     bool moreData = true;
 
-    if(metaData.value("Interval Value").toInt() == 0)
+    if (metaData.value("Interval Value").toInt() == 0)
         return;
 
     //Line up start date time to nearest interval
-    if( metaData.value("Interval Type") == "Count" )
-    {
-        periodBegin -= int(periodBegin)%metaData["Interval Value"].toInt();
-    }
-    else
-    {
-        while(true)
-        {
-            if(metaData.value("Interval Type") == "Second")
+    if ( metaData.value("Interval Type") == "Count" ) {
+        periodBegin -= int(periodBegin) % metaData["Interval Value"].toInt();
+    } else {
+        while (true) {
+            if (metaData.value("Interval Type") == "Second")
                 break;
 
-                periodBegin -= currentDataKey_qDateTime.time().second();
+            periodBegin -= currentDataKey_qDateTime.time().second();
 
-            if(metaData.value("Interval Type") == "Minute")
+            if (metaData.value("Interval Type") == "Minute")
                 break;
 
-                periodBegin -= currentDataKey_qDateTime.time().minute()*60;
+            periodBegin -= currentDataKey_qDateTime.time().minute() * 60;
 
-            if(metaData.value("Interval Type") == "Hour")
+            if (metaData.value("Interval Type") == "Hour")
                 break;
 
-                periodBegin -= currentDataKey_qDateTime.time().hour()*3600;
+            periodBegin -= currentDataKey_qDateTime.time().hour() * 3600;
 
-            if(metaData.value("Interval Type") == "Day")
+            if (metaData.value("Interval Type") == "Day")
                 break;
 
-            if(metaData.value("Interval Type") == "Week")
+            if (metaData.value("Interval Type") == "Week")
                 periodBegin -= (currentDataKey_qDateTime.date().dayOfWeek() - 1) * 86400;
             else if (metaData.value("Interval Type") == "Month")
                 periodBegin -= (currentDataKey_qDateTime.date().day() - 1) * 86400;
@@ -191,33 +182,24 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
 
     periodEnd_qDateTime = QDateTime::fromTime_t(uint(periodBegin));
 
-    if( metaData.value("Interval Type") ==  "Count" )
-    {
+    if ( metaData.value("Interval Type") ==  "Count" ) {
         periodEnd = periodBegin + metaData.value("Interval Value").toInt();
-    }
-    else
-    {
+    } else {
         IncrementDateTime( metaData, &periodEnd_qDateTime );
         periodEnd = periodEnd_qDateTime.toTime_t();
     }
 
-    while(moreData)
-    {
+    while (moreData) {
         //qDebug() << periodBegin << periodEnd << plotData.value().key << plotData.value().value;
-        if (plotData == graph->data()->constEnd())
-        {
+        if (plotData == graph->data()->constEnd()) {
             moreData = false;
-        }
-        else
-        {
+        } else {
             //Check for NaN
-            if(isInvalidData(plotData->value))
-            {
+            if (isInvalidData(plotData->value)) {
                 ++plotData;
                 continue;
             }
-            if (plotData->key < periodEnd)
-            {
+            if (plotData->key < periodEnd) {
                 currentDataValue = plotData->value;
                 ++plotData;
                 continue;
@@ -225,21 +207,17 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
         }
 
         //Found our next applicable point
-        if( (plotData->key >= periodEnd) || !moreData)
-        {
+        if ( (plotData->key >= periodEnd) || !moreData) {
             periodInterval = periodEnd - periodBegin;
 
-            x.append( (periodEnd-(periodInterval/2)) );
-            y.append(currentDataValue-periodStartValue);
+            x.append( (periodEnd - (periodInterval / 2)) );
+            y.append(currentDataValue - periodStartValue);
 
             periodBegin = periodEnd;
 
-            if( metaData.value("Interval Type") ==  "Count" )
-            {
+            if ( metaData.value("Interval Type") ==  "Count" ) {
                 periodEnd += metaData.value("Interval Value").toInt();
-            }
-            else
-            {
+            } else {
                 IncrementDateTime( metaData, &periodEnd_qDateTime );
                 periodEnd = periodEnd_qDateTime.toTime_t();
             }
@@ -248,19 +226,17 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
         }
     }
 
-    if(x.isEmpty() || y.isEmpty())
+    if (x.isEmpty() || y.isEmpty())
         return;
 
     auto *periodic = new QCPBars(activePlot->xAxis, activePlot->yAxis);
     periodic->setName(graph->name());
     periodic->setSelectable(QCP::stWhole);
 
-    if( (metaData.value("Interval Type") == "Year") || (metaData.value("Interval Type") == "Month") )
-    {
-       //Intervals that vary in length can't use the full width
-        periodic->setWidth(periodInterval*.75);
-    }
-    else
+    if ( (metaData.value("Interval Type") == "Year") || (metaData.value("Interval Type") == "Month") ) {
+        //Intervals that vary in length can't use the full width
+        periodic->setWidth(periodInterval * .75);
+    } else
         periodic->setWidth(periodInterval);
 
     periodic->setData(x, y);

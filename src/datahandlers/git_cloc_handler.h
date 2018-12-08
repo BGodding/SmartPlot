@@ -19,16 +19,16 @@ class git_cloc_handler : public QObject
 public:
     git_cloc_handler();
 
-    void addToSystemMenu(QMenu *menu, QCustomPlot* plot);
-    QPushButton *addToMessageBox(QMessageBox &msgBox, QCustomPlot* plot);
-    void addToContextMenu(QMenu *menu, QCustomPlot* plot);
-    void dataImport(const QVariantMap& modifier);
+    void addToSystemMenu(QMenu *menu, QCustomPlot *plot);
+    QPushButton *addToMessageBox(QMessageBox &msgBox, QCustomPlot *plot);
+    void addToContextMenu(QMenu *menu, QCustomPlot *plot);
+    void dataImport(const QVariantMap &modifier);
 
 public slots:
     void updateAxis(QCustomPlot *plot);
 
 protected:
-    bool eventFilter(QObject* object,QEvent* event);
+    bool eventFilter(QObject *object, QEvent *event);
 
 private slots:
     void menuDataImport();
@@ -36,7 +36,7 @@ private slots:
     void dataExport(QVariantMap modifier);
 
 private:
-    void openSqlFile(const QString& fileName);
+    void openSqlFile(const QString &fileName);
     void processLineFromFile(QString line, QString delimiter, QList<QVariantMap> &metaData);
     void connectToClocDatabase(QSqlDatabase *clocData);
 

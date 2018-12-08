@@ -14,7 +14,7 @@ public:
 
     void selectionChanged(QCustomPlot *customPlot);
 
-    void addToContextMenu(QMenu *menu, QCustomPlot* plot);
+    void addToContextMenu(QMenu *menu, QCustomPlot *plot);
 
 public slots:
     void selected_modifyData();

@@ -17,8 +17,8 @@ class influxdb_handler : public QObject
 public:
     influxdb_handler();
 
-    void addToSystemMenu(QMenu *menu, QCustomPlot* plot);
-    void addToContextMenu(QMenu *menu, QCustomPlot* plot);
+    void addToSystemMenu(QMenu *menu, QCustomPlot *plot);
+    void addToContextMenu(QMenu *menu, QCustomPlot *plot);
     void close();
 //    void dataImport(QVariantMap modifier);
 
@@ -32,13 +32,13 @@ private slots:
 //    void dataExport(QVariantMap modifier);
 
 protected:
-    bool eventFilter(QObject* object,QEvent* event);
+    bool eventFilter(QObject *object, QEvent *event);
 
 private:
     void generateMetaData();
 
     void setInfluxAddress(QUrl url);
-    QJsonDocument query(const QUrlQuery& urlQuery);
+    QJsonDocument query(const QUrlQuery &urlQuery);
 
     QVector<QVector<double> > seriesData;
     QVector<QVector<QString> > eventData;
@@ -49,7 +49,7 @@ private:
 
     QMenu contextMenu;
 
-    QCustomPlot* influxPlot{};
+    QCustomPlot *influxPlot{};
 
     axis_handler ah;
     plot_handler ph;

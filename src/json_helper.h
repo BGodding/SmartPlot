@@ -12,11 +12,11 @@ class json_helper : public QObject
     Q_OBJECT
 
 public:
-    void jsonDumpObject(const QJsonObject& jsonObject);
+    void jsonDumpObject(const QJsonObject &jsonObject);
     void jsonDumpArray(QJsonArray jsonArray);
-    void jsonDumpDoc(const QJsonDocument& jsondoc);
-    void getValues(const QJsonDocument& jsondoc, QVector<double> &key, QVector<double> &value);
-    QList<QVariant > getValues(const QJsonDocument& jsondoc);
+    void jsonDumpDoc(const QJsonDocument &jsondoc);
+    void getValues(const QJsonDocument &jsondoc, QVector<double> &key, QVector<double> &value);
+    QList<QVariant > getValues(const QJsonDocument &jsondoc);
 
 };
 

@@ -8,28 +8,29 @@
 class QCP_LIB_DECL plotStats
 {
 public:
-  plotStats();
-  plotStats(double average);
-  double totalData_seconds;
-  double totalNonZeroData_seconds;
-  int totalData_entrys;
-  double totalValue_DeltaP2P;
-  double maxValue;
-  double maxPosValue_DeltaP2P;
-  double maxNegValue_DeltaP2P;
-  double minValue;
-  double minValue_DeltaP2P;
-  double avgValue;
-  double longestTimeNoDelta_seconds;
-  double longestTimeDelta_seconds;
-  double totalTimeNoDelta_seconds;
-  double totalTimeDelta_seconds;
-  double currentTimeNoDelta_seconds;
-  double currentTimeDelta_seconds;
+    plotStats();
+    plotStats(double average);
+    double totalData_seconds;
+    double totalNonZeroData_seconds;
+    int totalData_entrys;
+    double totalValue_DeltaP2P;
+    double maxValue;
+    double maxPosValue_DeltaP2P;
+    double maxNegValue_DeltaP2P;
+    double minValue;
+    double minValue_DeltaP2P;
+    double avgValue;
+    double longestTimeNoDelta_seconds;
+    double longestTimeDelta_seconds;
+    double totalTimeNoDelta_seconds;
+    double totalTimeDelta_seconds;
+    double currentTimeNoDelta_seconds;
+    double currentTimeDelta_seconds;
 };
 Q_DECLARE_TYPEINFO(plotStats, Q_MOVABLE_TYPE);
 
-class plot_analytics {
+class plot_analytics
+{
 
 public:
 

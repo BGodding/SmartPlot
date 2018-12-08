@@ -15,7 +15,7 @@ csv_handler::csv_handler()
 #endif
 }
 
-void csv_handler::addToSystemMenu(QMenu *menu, QCustomPlot* plot)
+void csv_handler::addToSystemMenu(QMenu *menu, QCustomPlot *plot)
 {
     QVariantMap menuActionMap;
     menuActionMap["Active Plot"] = qVariantFromValue( static_cast <void *>(plot));
@@ -25,67 +25,60 @@ void csv_handler::addToSystemMenu(QMenu *menu, QCustomPlot* plot)
     action->setWhatsThis(tr("Use this option to open basic delimited text files"));
 }
 
-QPushButton *csv_handler::addToMessageBox(QMessageBox &msgBox, QCustomPlot* plot)
+QPushButton *csv_handler::addToMessageBox(QMessageBox &msgBox, QCustomPlot *plot)
 {
     Q_UNUSED(plot);
     return msgBox.addButton(tr("&OpenDataFile"), QMessageBox::ActionRole);
 }
 
 //Can probably make this generic
-void csv_handler::addToContextMenu(QMenu *menu, QCustomPlot* plot)
+void csv_handler::addToContextMenu(QMenu *menu, QCustomPlot *plot)
 {
-    if( metaData.isEmpty() || (!plot->selectedPlottables().empty()) )
+    if ( metaData.isEmpty() || (!plot->selectedPlottables().empty()) )
         return;
 
     QVariantMap menuActionMap;
     QAction *eventAction;
     QMenu *csvHandlerMenu = menu->addMenu( tr("Generic") );
     QMenu *eventsMenu = csvHandlerMenu->addMenu( tr("CSV Events") );
-    #ifndef MOBILE
+#ifndef MOBILE
     csvHandlerMenu->installEventFilter(this);
-    #endif
+#endif
 
     QVariant currentKeyField;
     //Iterate through meta data and append menus as needed
-    for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
-    {
+    for (int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++) {
         //TODO: Just make a menu action map entry?
         QVariantMap menuActionMap = metaData.value(metaDataIndex);
         menuActionMap.remove("Unique Event Meta Data");
         menuActionMap["Active Plot"] = qVariantFromValue( static_cast <void *>(plot));
 
-        if(menuActionMap.value("Data Type") == "Series")
-        {
+        if (menuActionMap.value("Data Type") == "Series") {
             eventAction = csvHandlerMenu->addAction(menuActionMap.value("Key Field").toString(), this, SLOT(dataPlot()));
             eventAction->setData(menuActionMap);
-        }
-        else if(menuActionMap.value("Data Type") == "Event")
-        {
-            if(eventsMenu->isEmpty())
-            {
+        } else if (menuActionMap.value("Data Type") == "Event") {
+            if (eventsMenu->isEmpty()) {
                 eventsMenu->installEventFilter(this);
 
-                menuActionMap["Key Value"] ="****";
+                menuActionMap["Key Value"] = "****";
                 eventsMenu->addAction( tr("All Events"), this, SLOT(dataPlot()))->setData(menuActionMap);
 
-                menuActionMap["Key Value"] ="    ";
+                menuActionMap["Key Value"] = "    ";
                 eventsMenu->addAction( tr("No Events"), this, SLOT(dataPlot()))->setData(menuActionMap);
             }
 
             QList<QVariant> uniqueEventMetaData = metaData.at(metaDataIndex).value("Unique Event Meta Data").toList();
-            for(int uniqueEventMetaDataIndex = 0; uniqueEventMetaDataIndex < uniqueEventMetaData.size() ; uniqueEventMetaDataIndex++)
-            {
+            for (int uniqueEventMetaDataIndex = 0; uniqueEventMetaDataIndex < uniqueEventMetaData.size() ; uniqueEventMetaDataIndex++) {
                 QVariantMap uniqueEventMetaDataMap = uniqueEventMetaData.value(uniqueEventMetaDataIndex).toMap();
 
-                if(uniqueEventMetaDataMap.value("Key Value").toString().isEmpty())
+                if (uniqueEventMetaDataMap.value("Key Value").toString().isEmpty())
                     continue;
 
                 //If the key field changes we need to create a new header in the menu
-                if(currentKeyField != uniqueEventMetaDataMap.value("Key Field"))
-                {
+                if (currentKeyField != uniqueEventMetaDataMap.value("Key Field")) {
                     menuActionMap.remove("Key Value");
 
-                    QAction* action = eventsMenu->addAction(menuActionMap.value("Key Field").toString(), this, SLOT(dataPlot()));
+                    QAction *action = eventsMenu->addAction(menuActionMap.value("Key Field").toString(), this, SLOT(dataPlot()));
 
                     //Make the header menu items stand out
                     QFont actionFont = action->font();
@@ -99,10 +92,10 @@ void csv_handler::addToContextMenu(QMenu *menu, QCustomPlot* plot)
                 }
 
                 menuActionMap["Key Value"] = uniqueEventMetaDataMap.value("Key Value");
-                QAction* action = eventsMenu->addAction(QIcon(":/graphics/visible.png"), menuActionMap.value("Key Value").toString(), this, SLOT(dataPlot()));
+                QAction *action = eventsMenu->addAction(QIcon(":/graphics/visible.png"), menuActionMap.value("Key Value").toString(), this, SLOT(dataPlot()));
                 action->setData(menuActionMap);
 
-                if(uniqueEventMetaDataMap.value("Active") == false)
+                if (uniqueEventMetaDataMap.value("Active") == false)
                     action->setIconVisibleInMenu(false);
             }
             eventsMenu->addSeparator();
@@ -111,15 +104,12 @@ void csv_handler::addToContextMenu(QMenu *menu, QCustomPlot* plot)
     }
 }
 
-void csv_handler::dataImport(const QVariantMap& modifier)
+void csv_handler::dataImport(const QVariantMap &modifier)
 {
     QFileInfo fileName = QFileInfo(modifier.value("File Name").toString());
-    if(fileName.exists())
-    {
-        if (!metaData.isEmpty())
-        {
-            if( QMessageBox::question(nullptr, tr("File Already Open"), tr("Add data to existing dataset?")) == QMessageBox::No)
-            {
+    if (fileName.exists()) {
+        if (!metaData.isEmpty()) {
+            if ( QMessageBox::question(nullptr, tr("File Already Open"), tr("Add data to existing dataset?")) == QMessageBox::No) {
                 seriesData.clear();
                 eventData.clear();
                 tickLabelLookup.clear();
@@ -131,7 +121,7 @@ void csv_handler::dataImport(const QVariantMap& modifier)
 
         generateUniqueLists(&eventData, metaData);
 
-        QCustomPlot* plot = (QCustomPlot*)modifier.value("Active Plot").value<void *>();
+        QCustomPlot *plot = (QCustomPlot *)modifier.value("Active Plot").value<void *>();
         ah.setAxisType(plot->xAxis, axis_handler::fixed);
     }
 }
@@ -141,25 +131,21 @@ void csv_handler::updateAxis(QCustomPlot *plot)
     ah.updateAxis(plot, metaData, eventData, tickLabelLookup, seriesData.first(), plot->xAxis2, maxVerticalEvents);
 }
 
-bool csv_handler::eventFilter(QObject* object,QEvent* event)
+bool csv_handler::eventFilter(QObject *object, QEvent *event)
 {
-    if ( event->type() == QEvent::MouseButtonRelease )
-    {
-        auto *objectMenu = qobject_cast<QMenu*>(object);
+    if ( event->type() == QEvent::MouseButtonRelease ) {
+        auto *objectMenu = qobject_cast<QMenu *>(object);
 
         //Check if object is actually a menu
-        if(objectMenu != nullptr)
-        {
+        if (objectMenu != nullptr) {
             QAction *menuAction = objectMenu->activeAction();
 
             //Check if the selected item has an action
-            if(menuAction != nullptr)
-            {
+            if (menuAction != nullptr) {
                 objectMenu->activeAction()->trigger();
 
                 //The events menu has icons that will need to be updated after action is triggered
-                foreach(QAction* action, objectMenu->actions())
-                {
+                foreach (QAction *action, objectMenu->actions()) {
                     QVariantMap actionData = action->data().toMap();
 
                     action->setIconVisibleInMenu(ah.isActionVisible(actionData, metaData));
@@ -176,15 +162,13 @@ bool csv_handler::eventFilter(QObject* object,QEvent* event)
 
 void csv_handler::menuDataImport()
 {
-    if (auto* contextAction = qobject_cast<QAction*>(sender()))
-    {
+    if (auto *contextAction = qobject_cast<QAction *>(sender())) {
         QVariantMap modifier = contextAction->data().toMap();
         QSettings settings;
 
         QString fileName = QFileDialog::getOpenFileName (nullptr, tr("Open Delimited Text file"),
                                                          settings.value("CSV Handler Source Directory").toString(), "TEXT (*.txt);;CSV (*.csv);;ANY (*.*)");
-        if(!fileName.isEmpty())
-        {
+        if (!fileName.isEmpty()) {
             //Remember directory
             settings.setValue("CSV Handler Source Directory", QFileInfo(fileName).absolutePath());
             modifier["File Name"] = fileName;
@@ -197,19 +181,15 @@ void csv_handler::menuDataImport()
 void csv_handler::dataPlot()
 {
     // make sure this slot is really called by a context menu action, so it carries the data we need
-    if (auto* contextAction = qobject_cast<QAction*>(sender()))
-    {
+    if (auto *contextAction = qobject_cast<QAction *>(sender())) {
         QVariantMap selectionData = contextAction->data().toMap();
-        QCustomPlot* plot = static_cast <QCustomPlot*>(selectionData["Active Plot"].value<void *>());
+        QCustomPlot *plot = static_cast <QCustomPlot *>(selectionData["Active Plot"].value<void *>());
 
-        if(selectionData.value("Data Type") == "Series")
-        {
+        if (selectionData.value("Data Type") == "Series") {
             ph.addPlotLine( seriesData, selectionData );
             ah.updateGraphAxes(plot);
             plot->replot();
-        }
-        else if (selectionData.value("Data Type") == "Event")
-        {
+        } else if (selectionData.value("Data Type") == "Event") {
             tickLabelLookup.clear();
 
             //Update the events with what the user choose
@@ -225,7 +205,7 @@ void csv_handler::dataExport(QVariantMap modifier)
     Q_UNUSED(modifier);
 }
 
-void csv_handler::openDelimitedFile(const QString& fileName)
+void csv_handler::openDelimitedFile(const QString &fileName)
 {
     int estimatedLineCount = th.estimateLineCount(fileName);
 
@@ -236,8 +216,7 @@ void csv_handler::openDelimitedFile(const QString& fileName)
     int startingMetaDatalistIndex = metaData.size();
     int metaDatalistIndex = startingMetaDatalistIndex;
 
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream textStream(&file);
         textStream.setAutoDetectUnicode(true);
 
@@ -249,9 +228,8 @@ void csv_handler::openDelimitedFile(const QString& fileName)
         delimiter = th.autoDetectDelimiter(textStream);
 
         // Check if the first column looks like a key axis (all values increasing)
-        if(th.firstColumnIsIncrimental(textStream, delimiter))
-        {
-            if( QMessageBox::question(nullptr, tr("Key Axis Found"), tr("Use first column as key axis?")) == QMessageBox::Yes)
+        if (th.firstColumnIsIncrimental(textStream, delimiter)) {
+            if ( QMessageBox::question(nullptr, tr("Key Axis Found"), tr("Use first column as key axis?")) == QMessageBox::Yes)
                 firstDataColumn = 1;
         }
 
@@ -261,23 +239,20 @@ void csv_handler::openDelimitedFile(const QString& fileName)
         // The data keys are always store in the series data
         int dataKeyColumn = seriesData.size();
 
-        while (!textStream.atEnd() && !progress.wasCanceled())
-        {
+        while (!textStream.atEnd() && !progress.wasCanceled()) {
             line = QString(textStream.readLine());
 
             //Refreshing the bar after every line is excessive
-            if(estimatedLineCount % 1000 == 0)
+            if (estimatedLineCount % 1000 == 0)
                 progress.setValue(int(file.pos()));
 
             // Throw away lines with no useful data
-            if (!line.isEmpty() && !line.startsWith(QChar::Null))
-            {
+            if (!line.isEmpty() && !line.startsWith(QChar::Null)) {
                 // Throw away lines if the file appears to be larger than the max allowed size
-                if( maxPlotSize < estimatedLineCount-- )
+                if ( maxPlotSize < estimatedLineCount-- )
                     continue;
 
-                if(metaDatalistIndex != metaData.size())
-                {
+                if (metaDatalistIndex != metaData.size()) {
                     QStringList strings = line.split(delimiter);
                     bool ok;
 
@@ -285,24 +260,20 @@ void csv_handler::openDelimitedFile(const QString& fileName)
                     QVector<double> tempVector;
                     seriesData.append(tempVector);
 
-                    for(;metaDatalistIndex < metaData.size();metaDatalistIndex++)
-                    {
-                        QVariantMap& mData = metaData[metaDatalistIndex];
+                    for (; metaDatalistIndex < metaData.size(); metaDatalistIndex++) {
+                        QVariantMap &mData = metaData[metaDatalistIndex];
 
                         QString targetString = strings.value(mData.value("Data Source").toInt());
                         // Here we make the assumption that if the first value for the column is
                         // non-numerical the column contains events (string data)
                         (void)targetString.toDouble(&ok);
-                        if(ok)
-                        {
+                        if (ok) {
                             QVector<double> tempVector;
                             seriesData.append(tempVector);
                             mData.insert( "Data Type", "Series" );
                             mData.insert( "Data Value Storage Index", (seriesData.size() - 1) );
                             mData.insert( "Data Key Storage Index", dataKeyColumn );
-                        }
-                        else
-                        {
+                        } else {
                             QVector<QString> tempVector;
                             eventData.append(tempVector);
                             mData.insert( "Data Type", "Event" );
@@ -321,41 +292,33 @@ void csv_handler::openDelimitedFile(const QString& fileName)
     }
 }
 
-void csv_handler::processLineFromFile(const QString& line, const QString& delimiter, int dataKeyColumn, int metaDataIndexStart, QList<QVariantMap> &metaData)
+void csv_handler::processLineFromFile(const QString &line, const QString &delimiter, int dataKeyColumn, int metaDataIndexStart, QList<QVariantMap> &metaData)
 {
     QStringList strings = line.split(delimiter);
 
     //If the first data column is 0 use size as the x-axis
-    if(metaData.first().value("Data Source").toInt() == 0)
-    {
+    if (metaData.first().value("Data Source").toInt() == 0) {
         seriesData[dataKeyColumn].append(seriesData[dataKeyColumn].size());
-    }
-    else
-    {
+    } else {
         seriesData[dataKeyColumn].append(strings.first().toInt());
     }
 
     //Iterate through meta data and append data as needed
-    for(int metaDataIndex = metaDataIndexStart; metaDataIndex < metaData.size(); metaDataIndex++)
-    {
-        const QVariantMap& metaDataAtIndex = metaData.at(metaDataIndex);
+    for (int metaDataIndex = metaDataIndexStart; metaDataIndex < metaData.size(); metaDataIndex++) {
+        const QVariantMap &metaDataAtIndex = metaData.at(metaDataIndex);
 
-        if(metaDataAtIndex.contains("Data Type"))
-        {
-            if(metaDataAtIndex.value("Data Type") == "Series")
-            {
+        if (metaDataAtIndex.contains("Data Type")) {
+            if (metaDataAtIndex.value("Data Type") == "Series") {
                 QString string = strings.value(metaDataAtIndex.value("Data Source").toInt());
                 double value;
                 bool ok;
                 value = string.toDouble(&ok);
 
-                if(!ok)
+                if (!ok)
                     value = std::numeric_limits<double>::quiet_NaN();
 
                 seriesData[metaDataAtIndex.value("Data Value Storage Index").toInt()].append(value);
-            }
-            else if(metaDataAtIndex.value("Data Type") == "Event")
-            {
+            } else if (metaDataAtIndex.value("Data Type") == "Event") {
                 QString string = strings.value(metaDataAtIndex.value("Data Source").toInt());
                 eventData[metaDataAtIndex.value("Data Value Storage Index").toInt()].append(string);
             }

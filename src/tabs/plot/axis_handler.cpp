@@ -7,8 +7,7 @@
 void axis_handler::updateGraphAxes(QCustomPlot *plot)
 {
     //Only rescale for the first graph
-    if( plot->plottableCount() == 1 )
-    {
+    if ( plot->plottableCount() == 1 ) {
         plot->plottable()->rescaleAxes();
     }
 
@@ -28,11 +27,12 @@ void axis_handler::updateGraphAxes(QCustomPlot *plot)
 }
 
 //This function get pretty bloated and slow with ~20,000 events.
-void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, QVector<QVector<QString> > &eventData, QMap<QString, QMap<int, QString> > &tickLabelLookup, QVector<double> &datetime, QCPAxis *axis, int maxVerticalEvents)
+void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, QVector<QVector<QString> > &eventData, QMap<QString, QMap<int, QString> > &tickLabelLookup, QVector<double> &datetime,
+                              QCPAxis *axis, int maxVerticalEvents)
 {
     Q_UNUSED(*axis);
 
-    if(eventData.isEmpty())
+    if (eventData.isEmpty())
         return;
 
     QVector<double> eventAxisDateTimes;
@@ -51,36 +51,26 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, Q
     double currentTimeStampWindow;
 
     //Iterate through meta data for event things and stuff
-    for(int row = 0; row < eventData.size(); row++)
-    {
+    for (int row = 0; row < eventData.size(); row++) {
         QString eventLabel;
         int searchIndex = eventData.indexOf(eventData.value(row));
-        if(searchIndex >= 0 && tickLabelLookup.value(metaData.first().value("Measurement").toString()).contains(searchIndex) )
-        {
+        if (searchIndex >= 0 && tickLabelLookup.value(metaData.first().value("Measurement").toString()).contains(searchIndex) ) {
             eventLabel = tickLabelLookup.value(metaData.first().value("Measurement").toString()).value(searchIndex);
 
-            if(eventLabel.isEmpty())
+            if (eventLabel.isEmpty())
                 continue;
-        }
-        else
-        {
-            if(isEventVisible(metaData, eventData, row, eventLabel))
-            {
+        } else {
+            if (isEventVisible(metaData, eventData, row, eventLabel)) {
                 tickLabelLookup[metaData.first().value("Measurement").toString()][searchIndex] = eventLabel;
-            }
-            else
-            {
+            } else {
                 tickLabelLookup[metaData.first().value("Measurement").toString()][searchIndex] = "";
                 continue;
             }
         }
 
-        if(eventLabelPixelWidthLookup.contains(eventLabel))
-        {
+        if (eventLabelPixelWidthLookup.contains(eventLabel)) {
             eventLabelPixelWidth = eventLabelPixelWidthLookup.value(eventLabel);
-        }
-        else
-        {
+        } else {
             eventLabelPixelWidthLookup[eventLabel] = fm.width(eventLabel);
             eventLabelPixelWidth = eventLabelPixelWidthLookup.value(eventLabel);
         }
@@ -91,17 +81,15 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, Q
         currentTimeStampWindow = 1.2 * (plot->xAxis->range().size() / (plot->axisRect()->width() / qMax(tickLabelPixelWidth, prevTickLabelPixelWidth)));
 
         //Make the assumption that the first column in the series data is the time axis
-        if( isInvalidData(currentTickTimeStamp) || ((currentTickTimeStamp + currentTimeStampWindow) <= datetime.value(row)) )
-        {
+        if ( isInvalidData(currentTickTimeStamp) || ((currentTickTimeStamp + currentTimeStampWindow) <= datetime.value(row)) ) {
             //Check if we had hidden items on the previous tick before we move on
-            if(currentTickNumberOfRows > maxVerticalEvents)
-            {
+            if (currentTickNumberOfRows > maxVerticalEvents) {
                 //Get the current label string
                 currentTickLabel = eventAxisStrings.last();
                 //Prepend the number of hidden events
-                currentTickLabel.prepend(QString("(%1)").arg(currentTickNumberOfRows-maxVerticalEvents));
+                currentTickLabel.prepend(QString("(%1)").arg(currentTickNumberOfRows - maxVerticalEvents));
                 //Replace the current label string
-                eventAxisStrings.replace((eventAxisStrings.size()-1), currentTickLabel);
+                eventAxisStrings.replace((eventAxisStrings.size() - 1), currentTickLabel);
             }
             //Add the information for the current tick
             eventAxisDateTimes.append(datetime.value(row));
@@ -112,16 +100,13 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, Q
             prevTickLabelPixelWidth = tickLabelPixelWidth;
             tickLabelPixelWidth = eventLabelPixelWidth;
 
-        }
-        else    //Adding event to the old tick
-        {
+        } else { //Adding event to the old tick
             //Check for vertical room on current tick label
-            if(!eventAxisStrings.isEmpty() && (currentTickNumberOfRows < maxVerticalEvents))
-            {
+            if (!eventAxisStrings.isEmpty() && (currentTickNumberOfRows < maxVerticalEvents)) {
                 currentTickLabel = eventAxisStrings.last();
                 currentTickLabel.append('\n');
                 currentTickLabel.append(eventLabel);
-                eventAxisStrings.replace((eventAxisStrings.size()-1), currentTickLabel);
+                eventAxisStrings.replace((eventAxisStrings.size() - 1), currentTickLabel);
                 tickLabelPixelWidth = qMax(tickLabelPixelWidth, eventLabelPixelWidth);
             }
 
@@ -134,8 +119,7 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, Q
 
     //Use the x axis dates as the tick vector
     QSharedPointer<QCPAxisTickerText> ticker = plot->xAxis2->ticker().dynamicCast<QCPAxisTickerText>();
-    if(ticker == nullptr)
-    {
+    if (ticker == nullptr) {
         //Force it to text
         plot->xAxis2->setTicker(QSharedPointer<QCPAxisTickerText>(new QCPAxisTickerText));
         ticker = plot->xAxis2->ticker().dynamicCast<QCPAxisTickerText>();
@@ -145,11 +129,11 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, Q
     plot->replot();
 }
 
-void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, const QJsonDocument& jsondoc, QCPAxis *axis, int maxVerticalEvents)
+void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, const QJsonDocument &jsondoc, QCPAxis *axis, int maxVerticalEvents)
 {
     Q_UNUSED(*axis);
 
-    if(jsondoc.isEmpty())
+    if (jsondoc.isEmpty())
         return;
 
     QVector<double> eventAxisDateTimes;
@@ -168,52 +152,46 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, c
     QJsonObject jsonObject = jsondoc.object();
     QJsonArray resultsArray = jsonObject.value("results").toArray();
 
-    if(resultsArray.isEmpty())
+    if (resultsArray.isEmpty())
         return;
 
-    foreach (const QJsonValue & resultsValue, resultsArray)
-    {
+    foreach (const QJsonValue &resultsValue, resultsArray) {
         QJsonObject resultsObject = resultsValue.toObject();
         QJsonArray seriesArray = resultsObject.value("series").toArray();
 
-        if(seriesArray.isEmpty())
+        if (seriesArray.isEmpty())
             return;
 
-        foreach(const QJsonValue & seriesValue, seriesArray)
-        {
+        foreach (const QJsonValue &seriesValue, seriesArray) {
             QJsonObject seriesObject = seriesValue.toObject();
             QVariantMap seriesMap;
 
             //We might need to add another iterator level to add support for multiple events per line.....fuc
             //if(seriesObject.value("name").toString() == selectionData.value("Key Field Display Text"])
-            if(seriesObject.value("name").toString() == "events")
-            {
+            if (seriesObject.value("name").toString() == "events") {
                 //Get the column order
                 QJsonArray columnArray = seriesObject.value("columns").toArray();
                 QJsonArray valuesArray = seriesObject.value("values").toArray();
 
                 int keyColumn = 0;
                 int column = 0;
-                foreach(const QJsonValue & columnValue, columnArray)
-                {
-                    if(columnValue.toString() == "time")
-                    {
+                foreach (const QJsonValue &columnValue, columnArray) {
+                    if (columnValue.toString() == "time") {
                         keyColumn = column;
                         break;
                     }
                     column++;
                 }
 
-                foreach(const QJsonValue & valuesValue, valuesArray)
-                {
+                foreach (const QJsonValue &valuesValue, valuesArray) {
                     //This is where we are iterating through the datas
                     //Pass valuesValue.toArray() minus the time to isEventVisible?
                     QCPGraphData dataPoint;
                     QDateTime dateTime = QDateTime::fromString(valuesValue.toArray().at(keyColumn).toString(), Qt::ISODate);
-                    currentDataRowTimeStamp = dateTime.toMSecsSinceEpoch()/1000;
+                    currentDataRowTimeStamp = dateTime.toMSecsSinceEpoch() / 1000;
 
                     QString eventLabel;
-                    if(!isEventVisible(metaData, valuesValue.toArray(), eventLabel))
+                    if (!isEventVisible(metaData, valuesValue.toArray(), eventLabel))
                         continue;
 
                     //If this is true we have a new tick!
@@ -221,17 +199,15 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, c
                     currentTimeStampWindow = 1.2 * (plot->xAxis->range().size() / (plot->axisRect()->width() / qMax(tickLabelPixelWidth, prevTickLabelPixelWidth)));
 
                     //Make the assumption that the first column in the series data is the time axis
-                    if( isInvalidData(currentTickTimeStamp) || ((currentTickTimeStamp + currentTimeStampWindow) <= currentDataRowTimeStamp) )
-                    {
+                    if ( isInvalidData(currentTickTimeStamp) || ((currentTickTimeStamp + currentTimeStampWindow) <= currentDataRowTimeStamp) ) {
                         //Check if we had hidden items on the previous tick before we move on
-                        if(currentTickNumberOfRows > maxVerticalEvents)
-                        {
+                        if (currentTickNumberOfRows > maxVerticalEvents) {
                             //Get the current label string
                             currentTickLabel = eventAxisStrings.last();
                             //Prepend the number of hidden events
-                            currentTickLabel.prepend(QString("(%1)").arg(currentTickNumberOfRows-maxVerticalEvents));
+                            currentTickLabel.prepend(QString("(%1)").arg(currentTickNumberOfRows - maxVerticalEvents));
                             //Replace the current label string
-                            eventAxisStrings.replace((eventAxisStrings.size()-1), currentTickLabel);
+                            eventAxisStrings.replace((eventAxisStrings.size() - 1), currentTickLabel);
                         }
                         //Add the information for the current tick
                         eventAxisDateTimes.append(currentDataRowTimeStamp);
@@ -241,18 +217,15 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, c
                         currentTickNumberOfRows = 1;
                         prevTickLabelPixelWidth = tickLabelPixelWidth;
                         tickLabelPixelWidth = fm.size(0, eventLabel).rwidth();
-                    }
-                    else    //Adding event to the old tick
-                    {
+                    } else { //Adding event to the old tick
                         //Check for vertical room on current tick label
-                        if(!eventAxisStrings.isEmpty() && (currentTickNumberOfRows < maxVerticalEvents))
-                        {
+                        if (!eventAxisStrings.isEmpty() && (currentTickNumberOfRows < maxVerticalEvents)) {
                             currentTickLabel = eventAxisStrings.last();
                             currentTickLabel.append('\n');
                             currentTickLabel.append(eventLabel);
-                            eventAxisStrings.replace((eventAxisStrings.size()-1), currentTickLabel);
+                            eventAxisStrings.replace((eventAxisStrings.size() - 1), currentTickLabel);
 
-                            if(fm.size(0, currentTickLabel).rwidth() > tickLabelPixelWidth)
+                            if (fm.size(0, currentTickLabel).rwidth() > tickLabelPixelWidth)
                                 tickLabelPixelWidth = fm.size(0, currentTickLabel).rwidth();
                         }
 
@@ -279,27 +252,27 @@ void axis_handler::updateAxisTickCount(QCustomPlot *customPlot, QWidget *window)
 {
     //qDebug() << "Pixel Ratio:" << devicePixelRatio() << this->width();
     //Account for higher DPI on mobile
-    #ifdef MOBILE
+#ifdef MOBILE
 
-    int buttonHeight = 60/devicePixelRatio();
-    int buttonWidth = 120/devicePixelRatio();
+    int buttonHeight = 60 / devicePixelRatio();
+    int buttonWidth = 120 / devicePixelRatio();
 
-    customPlot->xAxis->ticker()->setTickCount(window->width()*devicePixelRatio()/250);
+    customPlot->xAxis->ticker()->setTickCount(window->width()*devicePixelRatio() / 250);
 
     QSize screenSize = QApplication::primaryScreen()->availableSize();
 
     QList<QPushButton *> allPButtons = window->findChildren<QPushButton *>("+");
 
-    if(!allPButtons.isEmpty())
-        allPButtons.first()->setGeometry( (screenSize.width()-buttonWidth), (screenSize.height()-buttonHeight), buttonWidth, buttonHeight);
+    if (!allPButtons.isEmpty())
+        allPButtons.first()->setGeometry( (screenSize.width() - buttonWidth), (screenSize.height() - buttonHeight), buttonWidth, buttonHeight);
 
     allPButtons = window->findChildren<QPushButton *>("-");
 
-    if(!allPButtons.isEmpty())
-        allPButtons.first()->setGeometry( 0, (screenSize.height()-buttonHeight), buttonWidth, buttonHeight );
-    #else
-    customPlot->xAxis->ticker()->setTickCount(window->width()/200);
-    #endif
+    if (!allPButtons.isEmpty())
+        allPButtons.first()->setGeometry( 0, (screenSize.height() - buttonHeight), buttonWidth, buttonHeight );
+#else
+    customPlot->xAxis->ticker()->setTickCount(window->width() / 200);
+#endif
 }
 
 bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QVector<QVector<QString> > &eventData, int row, QString &tickLabel )
@@ -310,31 +283,24 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QVector<QVector<
     targetMap["Active"] = true;
 
     //Iterate through all the event data sources
-    for(auto metaDataAtIndex : metaData)
-    {
-        if( metaDataAtIndex.value("Data Type")=="Event" )
-        {
+    for (auto metaDataAtIndex : metaData) {
+        if ( metaDataAtIndex.value("Data Type") == "Event" ) {
             QList<QVariant> uniqueEventMetaData = metaDataAtIndex.value("Unique Event Meta Data").toList();
             //qDebug() << "uemd" << uniqueEventMetaData;
 
             targetMap["Key Value"] = eventData.value(row).value(metaDataAtIndex.value("Data Value Storage Index").toInt());
             targetMap["Key Field"] = metaDataAtIndex.value("Key Field");
 
-            if(uniqueEventMetaData.contains(targetMap))
-            {
-                if( metaDataAtIndex.value("Action") == "OR" )
-                {
+            if (uniqueEventMetaData.contains(targetMap)) {
+                if ( metaDataAtIndex.value("Action") == "OR" ) {
                     visible = true;
                 }
-            }
-            else if ( metaDataAtIndex.value("Action") == "AND" )
-            {
+            } else if ( metaDataAtIndex.value("Action") == "AND" ) {
                 return false;
             }
 
-            if(metaDataAtIndex.value("Tick Label") == true)
-            {
-                if(!tickLabel.isEmpty())
+            if (metaDataAtIndex.value("Tick Label") == true) {
+                if (!tickLabel.isEmpty())
                     tickLabel.append("-");
 
                 tickLabel.append(targetMap.value("Key Value").toString());
@@ -342,42 +308,35 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QVector<QVector<
         }
     }
 
-    if(tickLabel.isEmpty())
+    if (tickLabel.isEmpty())
         visible = false;
 
     return visible;
 }
 
-bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, const QJsonArray& eventData, QString &tickLabel )
+bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, const QJsonArray &eventData, QString &tickLabel )
 {
     bool visible = false;
 
     QVariantMap targetMap;
     targetMap["Active"] = true;
 
-    for(auto metaDataAtIndex : metaData)
-    {
-        if( metaDataAtIndex.value("Data Type")=="Event" )
-        {
+    for (auto metaDataAtIndex : metaData) {
+        if ( metaDataAtIndex.value("Data Type") == "Event" ) {
             QList<QVariant> uniqueEventMetaData = metaDataAtIndex.value("Unique Event Meta Data").toList();
 
             targetMap["Key Value"] = eventData.at(metaDataAtIndex.value("Data Value Storage Index").toInt()).toString();
 
-            if(uniqueEventMetaData.contains(targetMap))
-            {
-                if( metaDataAtIndex.value("Action") == "OR" )
-                {
+            if (uniqueEventMetaData.contains(targetMap)) {
+                if ( metaDataAtIndex.value("Action") == "OR" ) {
                     visible = true;
                 }
-            }
-            else if ( metaDataAtIndex.value("Action") == "AND" )
-            {
+            } else if ( metaDataAtIndex.value("Action") == "AND" ) {
                 return false;
             }
 
-            if(metaDataAtIndex.value("Tick Label") == true)
-            {
-                if(!tickLabel.isEmpty())
+            if (metaDataAtIndex.value("Tick Label") == true) {
+                if (!tickLabel.isEmpty())
                     tickLabel.append("-");
 
                 tickLabel.append(targetMap.value("Key Value").toString());
@@ -385,7 +344,7 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, const QJsonArray
         }
     }
 
-    if(tickLabel.isEmpty())
+    if (tickLabel.isEmpty())
         visible = false;
 
     return visible;
@@ -393,20 +352,17 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, const QJsonArray
 
 bool axis_handler::isActionVisible(QVariantMap &selectionData, QList<QVariantMap> &metaData)
 {
-    for(auto metaDataAtIndex : metaData)
-    {
-        if( (metaDataAtIndex.value("Series") == selectionData.value("Series")) &&
-            (metaDataAtIndex.value("Measurement") == selectionData.value("Measurement")) )
-        {
+    for (auto metaDataAtIndex : metaData) {
+        if ( (metaDataAtIndex.value("Series") == selectionData.value("Series")) &&
+                (metaDataAtIndex.value("Measurement") == selectionData.value("Measurement")) ) {
             QList<QVariant> uniqueEventMetaData = metaDataAtIndex.value("Unique Event Meta Data").toList();
 
             //qDebug() << selectionData.value("Series") << selectionData.value("Measurement") << selectionData.value("Key Field") << selectionData.value("Key Value");
 
-            for(const auto & uniqueEventMetaDataIndex : uniqueEventMetaData)
-            {
+            for (const auto &uniqueEventMetaDataIndex : uniqueEventMetaData) {
                 QVariantMap mData = uniqueEventMetaDataIndex.toMap();
 
-                if( (mData.value("Key Value") == selectionData.value("Key Value")) && (mData.value("Key Field") == selectionData.value("Key Field")) )
+                if ( (mData.value("Key Value") == selectionData.value("Key Value")) && (mData.value("Key Field") == selectionData.value("Key Field")) )
                     return mData.value("Active").toBool();
             }
         }
@@ -416,37 +372,26 @@ bool axis_handler::isActionVisible(QVariantMap &selectionData, QList<QVariantMap
 
 void axis_handler::toggleKeyValueVisibleInList(QVariantMap &selectionData, QList<QVariantMap> &metaData)
 {
-    if(!selectionData.contains("Key Value"))
+    if (!selectionData.contains("Key Value"))
         return;
 
-    for(auto & keyFieldMetaData : metaData)
-    {
-        if( (keyFieldMetaData.value("Series") == selectionData.value("Series")) &&
-            (keyFieldMetaData.value("Measurement") == selectionData.value("Measurement")) )
-        {
+    for (auto &keyFieldMetaData : metaData) {
+        if ( (keyFieldMetaData.value("Series") == selectionData.value("Series")) &&
+                (keyFieldMetaData.value("Measurement") == selectionData.value("Measurement")) ) {
             QList<QVariant> uniqueEventMetaData = keyFieldMetaData.value("Unique Event Meta Data").toList();
 
-            for(int uniqueEventMetaDataIndex = 0; uniqueEventMetaDataIndex < uniqueEventMetaData.size(); uniqueEventMetaDataIndex++)
-            {
+            for (int uniqueEventMetaDataIndex = 0; uniqueEventMetaDataIndex < uniqueEventMetaData.size(); uniqueEventMetaDataIndex++) {
                 QVariantMap uniqueEventMetaDataAtIndex = uniqueEventMetaData.value(uniqueEventMetaDataIndex).toMap();
                 //qDebug() << mData;
 
-                if(selectionData.value("Key Value") == "****")
-                {
+                if (selectionData.value("Key Value") == "****") {
                     uniqueEventMetaDataAtIndex["Active"] = true;
-                }
-                else if (selectionData.value("Key Value") == "    ")
-                {
+                } else if (selectionData.value("Key Value") == "    ") {
                     uniqueEventMetaDataAtIndex["Active"] = false;
-                }
-                else if( uniqueEventMetaDataAtIndex.value("Key Value") == selectionData.value("Key Value") )
-                {
-                    if(uniqueEventMetaDataAtIndex.value("Active") == true)
-                    {
+                } else if ( uniqueEventMetaDataAtIndex.value("Key Value") == selectionData.value("Key Value") ) {
+                    if (uniqueEventMetaDataAtIndex.value("Active") == true) {
                         uniqueEventMetaDataAtIndex["Active"] = false;
-                    }
-                    else
-                    {
+                    } else {
                         uniqueEventMetaDataAtIndex["Active"] = true;
                     }
                 }
@@ -459,28 +404,23 @@ void axis_handler::toggleKeyValueVisibleInList(QVariantMap &selectionData, QList
 
 void axis_handler::toggleKeyFieldVisibleInList(QVariantMap &selectionData, QList<QVariantMap> &metaData)
 {
-    if(selectionData.contains("Key Value"))
+    if (selectionData.contains("Key Value"))
         return;
 
-    for(auto & metaDataAtIndex : metaData)
-    {
-        if( (metaDataAtIndex.value("Series") == selectionData.value("Series")) &&
-            (metaDataAtIndex.value("Measurement") == selectionData.value("Measurement")) &&
-            (metaDataAtIndex.value("Key Field") == selectionData.value("Key Field")) )
-        {
-            if(metaDataAtIndex.value("Tick Label").toBool())
-            {
+    for (auto &metaDataAtIndex : metaData) {
+        if ( (metaDataAtIndex.value("Series") == selectionData.value("Series")) &&
+                (metaDataAtIndex.value("Measurement") == selectionData.value("Measurement")) &&
+                (metaDataAtIndex.value("Key Field") == selectionData.value("Key Field")) ) {
+            if (metaDataAtIndex.value("Tick Label").toBool()) {
                 metaDataAtIndex["Tick Label"] = false;
-            }
-            else
-            {
+            } else {
                 metaDataAtIndex["Tick Label"] = true;
             }
         }
     }
 }
 
-bool axis_handler::isAxisSelected(QCPAxis* axis)
+bool axis_handler::isAxisSelected(QCPAxis *axis)
 {
     if (axis->selectedParts().testFlag(QCPAxis::spAxis) || axis->selectedParts().testFlag(QCPAxis::spTickLabels))
         return true;
@@ -488,21 +428,19 @@ bool axis_handler::isAxisSelected(QCPAxis* axis)
         return false;
 }
 
-bool axis_handler::isAxisSelected(QCustomPlot* plot, QCPAxis::AxisType AxisTypes)
+bool axis_handler::isAxisSelected(QCustomPlot *plot, QCPAxis::AxisType AxisTypes)
 {
-    for(int axis = 0 ; axis < plot->selectedAxes().size() ; axis++)
-    {
-        if(plot->selectedAxes().value(axis)->axisType() == AxisTypes)
+    for (int axis = 0 ; axis < plot->selectedAxes().size() ; axis++) {
+        if (plot->selectedAxes().value(axis)->axisType() == AxisTypes)
             return true;
     }
     return false;
 }
 
-bool axis_handler::isAxisSelected(QCustomPlot* plot, QCPAxis::AxisType AxisTypes, QCPAxis::SelectablePart part)
+bool axis_handler::isAxisSelected(QCustomPlot *plot, QCPAxis::AxisType AxisTypes, QCPAxis::SelectablePart part)
 {
-    for(int axis = 0 ; axis < plot->selectedAxes().size() ; axis++)
-    {
-        if( (plot->selectedAxes().value(axis)->axisType() == AxisTypes) &&
+    for (int axis = 0 ; axis < plot->selectedAxes().size() ; axis++) {
+        if ( (plot->selectedAxes().value(axis)->axisType() == AxisTypes) &&
                 (plot->selectedAxes().value(axis)->selectedParts() & part))
             return true;
     }
@@ -512,11 +450,9 @@ bool axis_handler::isAxisSelected(QCustomPlot* plot, QCPAxis::AxisType AxisTypes
 bool axis_handler::isAxisTypeSelected(QCustomPlot *customPlot, QCPAxis::AxisType type)
 {
     int axisIndex = 0;
-    while(axisIndex < customPlot->axisRect()->axisCount(type))
-    {
+    while (axisIndex < customPlot->axisRect()->axisCount(type)) {
         if (isAxisSelected(customPlot->axisRect()->axis(type, axisIndex)) &&
-            customPlot->axisRect()->axis(type, axisIndex)->axisType() == type)
-        {
+                customPlot->axisRect()->axis(type, axisIndex)->axisType() == type) {
             return true;
         }
         axisIndex++;
@@ -524,17 +460,16 @@ bool axis_handler::isAxisTypeSelected(QCustomPlot *customPlot, QCPAxis::AxisType
     return false;
 }
 
-void axis_handler::setAxisSelected(QCPAxis* axis)
+void axis_handler::setAxisSelected(QCPAxis *axis)
 {
-    axis->setSelectedParts(QCPAxis::spAxis|QCPAxis::spTickLabels);
+    axis->setSelectedParts(QCPAxis::spAxis | QCPAxis::spTickLabels);
 }
 
-void axis_handler::setAxesSelected(const QList<QCPAxis*>& axis)
+void axis_handler::setAxesSelected(const QList<QCPAxis *> &axis)
 {
     int axisIndex = 0;
-    while(axisIndex < axis.size())
-    {
-        axis.at(axisIndex)->setSelectedParts(QCPAxis::spAxis|QCPAxis::spTickLabels);
+    while (axisIndex < axis.size()) {
+        axis.at(axisIndex)->setSelectedParts(QCPAxis::spAxis | QCPAxis::spTickLabels);
         axisIndex++;
     }
 }
@@ -542,8 +477,7 @@ void axis_handler::setAxesSelected(const QList<QCPAxis*>& axis)
 void axis_handler::setAxesSelected(QCustomPlot *customPlot, QCPAxis::AxisType type)
 {
     int axisIndex = 0;
-    while(axisIndex < customPlot->axisRect()->axisCount(type))
-    {
+    while (axisIndex < customPlot->axisRect()->axisCount(type)) {
         setAxisSelected(customPlot->axisRect()->axis(type, axisIndex));
         axisIndex++;
     }
@@ -552,20 +486,18 @@ void axis_handler::setAxesSelected(QCustomPlot *customPlot, QCPAxis::AxisType ty
 void axis_handler::setAxisType(QCPAxis *axis, tickerType type)
 {
     //Plot is current of type Date Time, switch to Numeric
-    if(type == fixed && axis->ticker().dynamicCast<QCPAxisTickerFixed>().isNull())
-    {
+    if (type == fixed && axis->ticker().dynamicCast<QCPAxisTickerFixed>().isNull()) {
         QSharedPointer<QCPAxisTickerFixed> ticker(new QCPAxisTickerFixed);
         ticker->setScaleStrategy(QCPAxisTickerFixed::ssMultiples);
         axis->setTicker(ticker);
-    }
-    else if (type == dateTime && axis->ticker().dynamicCast<QCPAxisTickerDateTime>().isNull())
+    } else if (type == dateTime && axis->ticker().dynamicCast<QCPAxisTickerDateTime>().isNull())
         axis->setTicker(QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime));
 }
 
 void axis_handler::toggleAxisType(QCPAxis *axis)
 {
     //Plot is current of type Date Time, switch to Numeric
-    if(axis->ticker().dynamicCast<QCPAxisTickerFixed>().isNull())
+    if (axis->ticker().dynamicCast<QCPAxisTickerFixed>().isNull())
         setAxisType(axis, axis_handler::fixed);
     else
         setAxisType(axis, axis_handler::dateTime);

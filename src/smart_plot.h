@@ -49,7 +49,7 @@ public:
 
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
-    void resizeEvent(QResizeEvent* event);
+    void resizeEvent(QResizeEvent *event);
     void closeEvent(QCloseEvent *);
 
 private slots:
@@ -59,13 +59,13 @@ private slots:
     void contextMenuRequest(QPoint pos);
 
     //Called by qcustomplot slot to rename the title
-    void titleDoubleClick(QMouseEvent* event);
+    void titleDoubleClick(QMouseEvent *event);
     //Called by qcustomplot slot to rename the selected axis
-    void axisDoubleClick(QCPAxis* axis, QCPAxis::SelectablePart part);
+    void axisDoubleClick(QCPAxis *axis, QCPAxis::SelectablePart part);
     //Called by qcustomplot slot to rename plot in legend
-    void legendDoubleClick(QCPLegend* legend, QCPAbstractLegendItem* item);
+    void legendDoubleClick(QCPLegend *legend, QCPAbstractLegendItem *item);
 
-    void iosOpen(const QString & fileName);
+    void iosOpen(const QString &fileName);
 
     void zoomInButtonPressed();
     void zoomOutButtonPressed();
@@ -75,9 +75,9 @@ private slots:
 private:
     void initLegend(QCustomPlot *customPlot);
     void initGraph(QCustomPlot *customPlot);
-    QCustomPlot* activePlot();
+    QCustomPlot *activePlot();
 
-    QVector<QCustomPlot*> plots;
+    QVector<QCustomPlot *> plots;
     plot_interface plotInterface;
     axis_handler axisHandler;
     csv_handler csvHandler;
