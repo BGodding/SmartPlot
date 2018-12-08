@@ -283,7 +283,7 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QVector<QVector<
     targetMap["Active"] = true;
 
     //Iterate through all the event data sources
-    for (auto metaDataAtIndex : metaData) {
+    for (const auto& metaDataAtIndex : metaData) {
         if ( metaDataAtIndex.value("Data Type") == "Event" ) {
             QList<QVariant> uniqueEventMetaData = metaDataAtIndex.value("Unique Event Meta Data").toList();
             //qDebug() << "uemd" << uniqueEventMetaData;
@@ -321,7 +321,7 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, const QJsonArray
     QVariantMap targetMap;
     targetMap["Active"] = true;
 
-    for (auto metaDataAtIndex : metaData) {
+    for (const auto& metaDataAtIndex : metaData) {
         if ( metaDataAtIndex.value("Data Type") == "Event" ) {
             QList<QVariant> uniqueEventMetaData = metaDataAtIndex.value("Unique Event Meta Data").toList();
 
@@ -352,7 +352,7 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, const QJsonArray
 
 bool axis_handler::isActionVisible(QVariantMap &selectionData, QList<QVariantMap> &metaData)
 {
-    for (auto metaDataAtIndex : metaData) {
+    for (const auto& metaDataAtIndex : metaData) {
         if ( (metaDataAtIndex.value("Series") == selectionData.value("Series")) &&
                 (metaDataAtIndex.value("Measurement") == selectionData.value("Measurement")) ) {
             QList<QVariant> uniqueEventMetaData = metaDataAtIndex.value("Unique Event Meta Data").toList();

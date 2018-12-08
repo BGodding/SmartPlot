@@ -220,7 +220,7 @@ void git_cloc_handler::dataPlot()
             addedLines.append(0);
             removedLines.append(0);
 
-            for (auto keyFieldMetaData : metaData) {
+            for (const auto& keyFieldMetaData : metaData) {
                 if (keyFieldMetaData.value("Active") == true) {
                     query.exec(QString("SELECT nCode FROM results WHERE snapshot_id=%1 AND type='count' AND language='%2'").arg(version).arg(keyFieldMetaData.value("Key Field").toString()));
                     query.next();

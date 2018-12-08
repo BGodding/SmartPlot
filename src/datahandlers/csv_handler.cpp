@@ -37,7 +37,6 @@ void csv_handler::addToContextMenu(QMenu *menu, QCustomPlot *plot)
     if ( metaData.isEmpty() || (!plot->selectedPlottables().empty()) )
         return;
 
-    QVariantMap menuActionMap;
     QAction *eventAction;
     QMenu *csvHandlerMenu = menu->addMenu( tr("Generic") );
     QMenu *eventsMenu = csvHandlerMenu->addMenu( tr("CSV Events") );

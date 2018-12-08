@@ -76,8 +76,6 @@ void json_helper::getValues(const QJsonDocument &jsondoc, QVector<double> &key, 
 
         foreach (const QJsonValue &seriesValue, seriesArray) {
             QJsonObject seriesObject = seriesValue.toObject();
-
-            QJsonArray columnArray = seriesObject["columns"].toArray();
             QJsonArray valuesArray = seriesObject["values"].toArray();
 
             foreach (const QJsonValue &valuesValue, valuesArray) {
