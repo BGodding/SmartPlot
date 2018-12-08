@@ -141,7 +141,7 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
     double currentDataValue = plotData->value;
     double periodStartValue = plotData->value;
     double periodBegin = plotData->key;
-    double periodEnd = 0;
+    double periodEnd;
     double periodInterval;
 
     QDateTime periodEnd_qDateTime;
@@ -162,17 +162,17 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
         {
             if(metaData.value("Interval Type") == "Second")
                 break;
-            
+
                 periodBegin -= currentDataKey_qDateTime.time().second();
 
             if(metaData.value("Interval Type") == "Minute")
                 break;
-            
+
                 periodBegin -= currentDataKey_qDateTime.time().minute()*60;
 
             if(metaData.value("Interval Type") == "Hour")
                 break;
-            
+
                 periodBegin -= currentDataKey_qDateTime.time().hour()*3600;
 
             if(metaData.value("Interval Type") == "Day")
@@ -193,7 +193,7 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
 
     if( metaData.value("Interval Type") ==  "Count" )
     {
-        periodEnd += metaData.value("Interval Value").toInt();
+        periodEnd = periodBegin + metaData.value("Interval Value").toInt();
     }
     else
     {
