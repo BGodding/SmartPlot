@@ -82,7 +82,7 @@ void plot_interface::selectionChanged(QCustomPlot *customPlot)
     }
 
     //If any plot is selected makes sure drag and zoom uses that plots axes
-    if (customPlot->selectedPlottables().size() > 0)
+    if (!customPlot->selectedPlottables().empty())
     {
         customPlot->axisRect()->setRangeZoomAxes(selectedAxes);
         customPlot->axisRect()->setRangeDragAxes(selectedAxes);
@@ -96,7 +96,7 @@ void plot_interface::addToContextMenu(QMenu *menu, QCustomPlot* plot)
     metaDataMap["Active Plot"] = qVariantFromValue( static_cast <void *>(plot));
 
     //If a plot is selected show the modify plot menu
-    if( ( plot->selectedPlottables().size() > 0 ) || (plot->selectedItems().size() > 0 ) || ah.isAxisSelected(plot, QCPAxis::atLeft) || ah.isAxisSelected(plot, QCPAxis::atRight) )
+    if( ( !plot->selectedPlottables().empty() ) || (!plot->selectedItems().empty() ) || ah.isAxisSelected(plot, QCPAxis::atLeft) || ah.isAxisSelected(plot, QCPAxis::atRight) )
     {
         menu->addAction( QIcon(":/graphics/pickNewLineColor.png"), tr("Pick Line Color"),
                          this, SLOT(selected_pickNewLineColor()) )->setData(metaDataMap);
@@ -106,13 +106,13 @@ void plot_interface::addToContextMenu(QMenu *menu, QCustomPlot* plot)
     }
 
     //If the xAxis is selected show the modify plot menu
-    if( ((plot->graphCount() > 0) && (plot->selectedItems().size() > 0 )) || ah.isAxisSelected(plot, QCPAxis::atBottom, QCPAxis::spTickLabels))
+    if( ((plot->graphCount() > 0) && (!plot->selectedItems().empty() )) || ah.isAxisSelected(plot, QCPAxis::atBottom, QCPAxis::spTickLabels))
     {
         menu->addAction( QIcon(":/graphics/axes.png"),       tr("Toggle Axis Format"),
                          this, SLOT(toggleAxisType()) )->setData(metaDataMap);
     }
 
-    if ( plot->selectedPlottables().size() > 0 )
+    if ( !plot->selectedPlottables().empty() )
     {
         QMenu *axesUnitsMenu = menu->addMenu (QIcon(":/graphics/axes.png"), tr("Axes") );
 
@@ -184,7 +184,7 @@ void plot_interface::addToContextMenu(QMenu *menu, QCustomPlot* plot)
         convertUnitsMenu->addAction(QIcon(":/graphics/pressure.png"),
                                     tr("Bar <- PSI"), this, SLOT(selectedPlot_convertUnits()))->setData(metaDataMap);
 
-        if(plot->selectedGraphs().size() == 0)
+        if(plot->selectedGraphs().empty())
         {
             menu->addAction(QIcon(":/graphics/pickNewFillColor.png"), tr("Pick Fill Color"), this, SLOT(selectedPlot_pickNewFillColor()));
         }
@@ -250,7 +250,7 @@ void plot_interface::addToContextMenu(QMenu *menu, QCustomPlot* plot)
 void plot_interface::selected_remove()
 {
     // make sure this slot is really called by a context menu action, so it carries the data we need
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
@@ -303,13 +303,13 @@ void plot_interface::selected_remove()
 void plot_interface::selected_rescaleGraph()
 {
     // make sure this slot is really called by a context menu action, so it carries the data we need
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
         QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
-        if (activePlot->selectedPlottables().size() > 0)
+        if (!activePlot->selectedPlottables().empty())
         {
             activePlot->selectedPlottables().first()->rescaleValueAxis();
 
@@ -326,7 +326,7 @@ void plot_interface::selected_rescaleGraph()
 void plot_interface::selected_pickNewLineColor()
 {
     // make sure this slot is really called by a context menu action, so it carries the data we need
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
@@ -357,7 +357,7 @@ void plot_interface::selected_pickNewLineColor()
 void plot_interface::selected_pickNewFillColor()
 {
     // make sure this slot is really called by a context menu action, so it carries the data we need
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
@@ -374,7 +374,7 @@ void plot_interface::selected_pickNewFillColor()
 void plot_interface::selected_changeAxis()
 {
     // make sure this slot is really called by a context menu action, so it carries the data we need
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
@@ -427,13 +427,13 @@ void plot_interface::selected_changeAxis()
 void plot_interface::selectedPlot_stats()
 {
     // make sure this slot is really called by a context menu action, so it carries the data we need
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
         QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
-        if(activePlot->selectedGraphs().size() > 0)
+        if(!activePlot->selectedGraphs().empty())
         {
             plot_analytics analytics;
             plotStats stats;
@@ -471,13 +471,13 @@ void plot_interface::selectedPlot_stats()
 void plot_interface::selectedPlot_convertUnits()
 {
     // make sure this slot is really called by a context menu action, so it carries the data we need
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
         QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
-        if(activePlot->selectedGraphs().size() > 0)
+        if(!activePlot->selectedGraphs().empty())
         {
             QString conversionFunciton;
 
@@ -509,7 +509,7 @@ void plot_interface::selectedPlot_convertUnits()
 void plot_interface::removeAll()
 {
     // make sure this slot is really called by a context menu action, so it carries the data we need
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
@@ -525,7 +525,7 @@ void plot_interface::removeAll()
 void plot_interface::toggleAxisType()
 {
     // make sure this slot is really called by a context menu action, so it carries the data we need
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
@@ -539,13 +539,13 @@ void plot_interface::toggleAxisType()
 
 void plot_interface::selectedPlot_convert()
 {
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
         QCustomPlot* activePlot = static_cast <QCustomPlot*>(metaDataMap["Active Plot"].value<void *>());
 
-        if(activePlot->selectedGraphs().size() > 0)
+        if(!activePlot->selectedGraphs().empty())
         {
             ph.plotAddPeriodicReport( activePlot->selectedGraphs().first(),  metaDataMap );
             selected_remove();
@@ -558,7 +558,7 @@ void plot_interface::selectedPlot_convert()
 //TODO: This currently uses the first selected plot to drive point intervals, should probably pick the one with the most points..
 void plot_interface::selected_modifyData()
 {
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap metaDataMap = contextAction->data().toMap();
 
@@ -568,7 +568,7 @@ void plot_interface::selected_modifyData()
         QString functionString("(function(");
         bool ok;
 
-        if (activePlot->selectedPlottables().size() > 0)
+        if (!activePlot->selectedPlottables().empty())
         {
             QString messageBoxText(tr("Enter Equation:"));
             int symbolChar = 122; //z
@@ -581,12 +581,12 @@ void plot_interface::selected_modifyData()
 
             for(int plot = 0 ; plot < activePlot->selectedPlottables().size() ; plot++)
             {
-                QCPBars* currentBar =  qobject_cast<QCPBars*>(activePlot->selectedPlottables().value(plot));
-                QCPGraph* currentGraph =  qobject_cast<QCPGraph*>(activePlot->selectedPlottables().value(plot));
+                auto* currentBar =  qobject_cast<QCPBars*>(activePlot->selectedPlottables().value(plot));
+                auto* currentGraph =  qobject_cast<QCPGraph*>(activePlot->selectedPlottables().value(plot));
 
-                if((currentBar!=nullptr) && (graphData.size()==0))
+                if((currentBar!=nullptr) && (graphData.empty()))
                 {
-                    if(barData.size()==0)
+                    if(barData.empty())
                         firstBar = currentBar;
 
                     //Only do math on matching data sets, we will assume if the starting key values are the same and the number of key values are the
@@ -596,9 +596,9 @@ void plot_interface::selected_modifyData()
                     else
                         continue;
                 }
-                else if ((currentGraph!=nullptr) && (barData.size()==0))
+                else if ((currentGraph!=nullptr) && (barData.empty()))
                 {
-                    if(graphData.size()==0)
+                    if(graphData.empty())
                         firstGraph = currentGraph;
 
                     graphData.append(currentGraph->data()->constBegin());
@@ -632,7 +632,7 @@ void plot_interface::selected_modifyData()
             QJSValue plotFunction = plotEngine.evaluate(functionString);
             QJSValueList plotValue;
 
-            if(graphData.size()!=0)
+            if(!graphData.empty())
             {
                 while(graphData.first() != firstGraph->data()->constEnd())
                 {
@@ -641,7 +641,7 @@ void plot_interface::selected_modifyData()
                     //populate QScriptValueList with data from each graph for the plotFunction call
                     for(int graph = 0 ; graph < graphData.size() ; graph++)
                     {
-                        QCPGraph* currentGraph =  qobject_cast<QCPGraph*>(activePlot->selectedPlottables().value(graph));
+                        auto* currentGraph =  qobject_cast<QCPGraph*>(activePlot->selectedPlottables().value(graph));
                         QCPGraphDataContainer::const_iterator refIterator = currentGraph->data().data()->findBegin(x.last(), false);
                         if(refIterator != currentGraph->data().data()->constEnd())
                         {
@@ -664,7 +664,7 @@ void plot_interface::selected_modifyData()
                 firstGraph->setData(x, y);
                 firstGraph->setName(firstGraph->name()+"*");
             }
-            else if(barData.size()!=0)
+            else if(!barData.empty())
             {
                 while(barData.first() != firstBar->data()->constEnd())
                 {
@@ -679,9 +679,9 @@ void plot_interface::selected_modifyData()
                     if(isInvalidData(barData.first()->value))
                         barData.first()->value = 0;//std::numeric_limits<double>::quiet_NaN();
 
-                    for(int bar = 0 ; bar < barData.size() ; bar++)
+                    for(auto & bar : barData)
                     {
-                        barData[bar]++;
+                        bar++;
                     }
                 }
             }

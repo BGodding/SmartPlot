@@ -21,7 +21,7 @@ QPushButton *git_cloc_handler::addToMessageBox(QMessageBox &msgBox, QCustomPlot*
 //Can probably make this generic
 void git_cloc_handler::addToContextMenu(QMenu *menu, QCustomPlot* plot)
 {
-    if( metaData.isEmpty() || (plot->selectedPlottables().size() > 0) )
+    if( metaData.isEmpty() || (!plot->selectedPlottables().empty()) )
         return;
 
     QVariantMap menuActionMap;
@@ -54,7 +54,7 @@ void git_cloc_handler::addToContextMenu(QMenu *menu, QCustomPlot* plot)
     }
 }
 
-void git_cloc_handler::dataImport(QVariantMap modifier)
+void git_cloc_handler::dataImport(const QVariantMap& modifier)
 {
     QFileInfo fileName = QFileInfo(modifier.value("File Name").toString());
     if(fileName.exists())
@@ -83,7 +83,7 @@ bool git_cloc_handler::eventFilter(QObject* object,QEvent* event)
 {
     if ( event->type() == QEvent::MouseButtonRelease )
     {
-        QMenu *objectMenu = qobject_cast<QMenu*>(object);
+        auto *objectMenu = qobject_cast<QMenu*>(object);
 
         //Check if object is actually a menu
         if(objectMenu != nullptr)
@@ -118,7 +118,7 @@ bool git_cloc_handler::eventFilter(QObject* object,QEvent* event)
 
 void git_cloc_handler::menuDataImport()
 {
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap modifier = contextAction->data().toMap();
         QSettings settings;
@@ -139,7 +139,7 @@ void git_cloc_handler::menuDataImport()
 void git_cloc_handler::dataPlot()
 {
     // make sure this slot is really called by a context menu action, so it carries the data we need
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap selectionData = contextAction->data().toMap();
         QCustomPlot* customPlot = static_cast <QCustomPlot*>(selectionData["Active Plot"].value<void *>());
@@ -218,7 +218,7 @@ void git_cloc_handler::dataPlot()
             dateTime = query.value(0).toInt();
 
             //Fill in gaps here
-            if( (dates.size() > 0) && ((dateTime - dates.last()) > (resolution*1.1)) )
+            if( (!dates.empty()) && ((dateTime - dates.last()) > (resolution*1.1)) )
             {
                 while( (dateTime - dates.last()) > (resolution*1.1) )
                 {
@@ -244,9 +244,8 @@ void git_cloc_handler::dataPlot()
             addedLines.append(0);
             removedLines.append(0);
 
-            for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
+            for(auto keyFieldMetaData : metaData)
             {
-                QVariantMap keyFieldMetaData = metaData[metaDataIndex];
                 if (keyFieldMetaData.value("Active")==true)
                 {
                     query.exec(QString("SELECT nCode FROM results WHERE snapshot_id=%1 AND type='count' AND language='%2'").arg(version).arg(keyFieldMetaData.value("Key Field").toString()));
@@ -276,10 +275,10 @@ void git_cloc_handler::dataPlot()
         customPlot->clearPlottables();
         customPlot->clearItems();
 
-        QCPBars *same = new QCPBars(customPlot->xAxis, customPlot->yAxis);
-        QCPBars *modified = new QCPBars(customPlot->xAxis, customPlot->yAxis);
-        QCPBars *added = new QCPBars(customPlot->xAxis, customPlot->yAxis);
-        QCPBars *removed = new QCPBars(customPlot->xAxis, customPlot->yAxis);
+        auto *same = new QCPBars(customPlot->xAxis, customPlot->yAxis);
+        auto *modified = new QCPBars(customPlot->xAxis, customPlot->yAxis);
+        auto *added = new QCPBars(customPlot->xAxis, customPlot->yAxis);
+        auto *removed = new QCPBars(customPlot->xAxis, customPlot->yAxis);
 
         removed->setName(tr("Removed"));
         removed->setData(dates, removedLines);
@@ -323,7 +322,7 @@ void git_cloc_handler::dataExport(QVariantMap modifier)
     Q_UNUSED(modifier);
 }
 
-void git_cloc_handler::openSqlFile(QString fileName)
+void git_cloc_handler::openSqlFile(const QString& fileName)
 {
     QFile file(fileName);
     QString line = QString();

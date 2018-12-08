@@ -18,7 +18,7 @@ public:
     void addToSystemMenu(QMenu *menu, QCustomPlot* plot);
     QPushButton *addToMessageBox(QMessageBox &msgBox, QCustomPlot* plot);
     void addToContextMenu(QMenu *menu, QCustomPlot* plot);
-    void dataImport(QVariantMap modifier);
+    void dataImport(const QVariantMap& modifier);
 
 public slots:
     void updateAxis(QCustomPlot *plot);
@@ -32,8 +32,8 @@ private slots:
     void dataExport(QVariantMap modifier);
 
 private:
-    void openDelimitedFile(QString fileName);
-    void processLineFromFile(QString line, QString delimiter, int dataKeyColumn, int metaDataIndexStart, QList<QVariantMap> &metaData);
+    void openDelimitedFile(const QString& fileName);
+    void processLineFromFile(const QString& line, const QString& delimiter, int dataKeyColumn, int metaDataIndexStart, QList<QVariantMap> &metaData);
 //  Series data vectors are stored so the sub vector contains all data in a column
 //  This works well as we often want to take and plot a column of data
 //  Header: timestamp     | Data Set 1    | Data Set 2    | ... | Data Set x

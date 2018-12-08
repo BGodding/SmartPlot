@@ -14,13 +14,13 @@ class text_helper : public QObject
 
 public:
     QString autoDetectDelimiter(QTextStream& stream);
-    bool firstColumnIsIncrimental(QTextStream& stream, QString delimiter);
-    QString cleanDateTimeString(QString rawDate, QString rawTime);
-    void checkAndProcessColumnHeaders(QTextStream& stream, QString delimiter, QList<QVariantMap> &metaData, int firstDataColumn);
+    bool firstColumnIsIncrimental(QTextStream& stream, const QString& delimiter);
+    QString cleanDateTimeString(const QString& rawDate, const QString& rawTime);
+    void checkAndProcessColumnHeaders(QTextStream& stream, const QString& delimiter, QList<QVariantMap> &metaData, int firstDataColumn);
     int versionStringToInt(QString version);
     QString versionIntToString(int version);
-    bool isVersionOk(QString minVersion, QString maxVersion, QString readVersion);
-    int estimateLineCount( QString fileName );
+    bool isVersionOk(QString minVersion, QString maxVersion, const QString& readVersion);
+    int estimateLineCount( const QString& fileName );
 
     void insertDataBreak(double dateTime, QVector<QVector<double> > &seriesData, QVector<QVector<QString> > &eventData, QList<QVariantMap> &metaData);
 };

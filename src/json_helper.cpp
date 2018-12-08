@@ -2,7 +2,7 @@
 
 #include <QDebug>
 
-void json_helper::jsonDumpObject(QJsonObject jsonObject)
+void json_helper::jsonDumpObject(const QJsonObject& jsonObject)
 {
     qDebug() << "Object Keys: " << jsonObject.keys();
     QStringList keyList = jsonObject.keys();
@@ -58,7 +58,7 @@ void json_helper::jsonDumpArray(QJsonArray jsonArray)
     }
 }
 
-void json_helper::jsonDumpDoc(QJsonDocument jsondoc)
+void json_helper::jsonDumpDoc(const QJsonDocument& jsondoc)
 {
     if(jsondoc.isArray())
     {
@@ -74,7 +74,7 @@ void json_helper::jsonDumpDoc(QJsonDocument jsondoc)
     }
 }
 
-void json_helper::getValues(QJsonDocument jsondoc, QVector<double> &key, QVector<double> &value)
+void json_helper::getValues(const QJsonDocument& jsondoc, QVector<double> &key, QVector<double> &value)
 {
     QJsonObject jsonObject = jsondoc.object();
     QJsonArray resultsArray = jsonObject["results"].toArray();
@@ -118,7 +118,7 @@ void json_helper::getValues(QJsonDocument jsondoc, QVector<double> &key, QVector
 
 //}
 
-QList<QVariant > json_helper::getValues(QJsonDocument jsondoc)
+QList<QVariant > json_helper::getValues(const QJsonDocument& jsondoc)
 {
     QList<QVariant > values;
     QMap<QString, QVariant> propertyInfo;

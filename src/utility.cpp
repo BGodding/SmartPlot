@@ -2,11 +2,9 @@
 
 void generateUniqueLists( QVector<QVector<QString> > *data, QList<QVariantMap> &metaData)
 {
-    for(int measurementMetaDataIndex = 0; measurementMetaDataIndex < metaData.size(); measurementMetaDataIndex++)
+    for(auto & keyFieldMetaData : metaData)
     {
-        QVariantMap& keyFieldMetaData = metaData[measurementMetaDataIndex];
-
-        if( (keyFieldMetaData.value("Data Type") == "Event") )
+        if( keyFieldMetaData.value("Data Type") == "Event" )
         {
             QList<QString> list;
             QList<QVariant> uniqueEventMetaData;
@@ -31,7 +29,7 @@ void generateUniqueLists( QVector<QVector<QString> > *data, QList<QVariantMap> &
 
 // referencePairs uses the key as the primary data source and the value as the reference data source
 // It is also to  be noted the reference data source will no longer be part of the unique list
-void generateUniqueLists( QVector<QVector<QString> > *data, QList<QVariantMap> &metaData, QMap<int, int> referencePairs)
+void generateUniqueLists( QVector<QVector<QString> > *data, QList<QVariantMap> &metaData, const QMap<int, int>& referencePairs)
 {
     for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
     {
@@ -44,7 +42,7 @@ void generateUniqueLists( QVector<QVector<QString> > *data, QList<QVariantMap> &
 
         QVariantMap& metaDataAtIndex = metaData[metaDataIndex];
 
-        if( (metaDataAtIndex.value("Data Type") == "Event") )
+        if( metaDataAtIndex.value("Data Type") == "Event" )
         {
             QList<QVariant> uniqueDataMapList;
             QVariantMap uniqueDataMap;
@@ -61,7 +59,7 @@ void generateUniqueLists( QVector<QVector<QString> > *data, QList<QVariantMap> &
                 QVariantMap& metaDataAtReferenceIndex = metaData[referencePairs.value(metaDataIndex)];
                 int referenceColumn = metaDataAtReferenceIndex.value("Data Value Storage Index").toInt();
                 QMap<QString, QString> map = generateUniqueListWithRef(data, primaryColumn, referenceColumn);
-                for(auto e : map.keys())
+                for(const auto& e : map.keys())
                 {
                     uniqueDataMap["Key Value"] = e;
                     uniqueDataMapList.append(uniqueDataMap);
@@ -134,7 +132,7 @@ QPen setPenAlpha(QPen pen, int alpha)
     return pen;
 }
 
-void IncrementDateTime( QVariantMap metaData, QDateTime *dateTime )
+void IncrementDateTime( const QVariantMap& metaData, QDateTime *dateTime )
 {
     if( metaData.value("Interval Type") == "Year" )
         *dateTime = dateTime->addYears(metaData.value("Interval Value").toInt());
@@ -179,7 +177,7 @@ QString seconds_to_DHMS(quint32 duration)
 
     if((hours == 0)&&(days == 0))
         return res.sprintf("%02d:%02d", minutes, seconds);
-    else if (days == 0)
+    if (days == 0)
         return res.sprintf("%02d:%02d:%02d", hours, minutes, seconds);
     else
         return res.sprintf("%dd%02d:%02d:%02d", days, hours, minutes, seconds);

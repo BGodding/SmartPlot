@@ -3,6 +3,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QDebug>
+#include <utility>
 
 QString text_helper::autoDetectDelimiter(QTextStream& stream)
 {
@@ -36,7 +37,7 @@ QString text_helper::autoDetectDelimiter(QTextStream& stream)
     //Reposition the stream
     stream.seek(streamStartingPosition);
 
-    if(possibleDelimiters.size()>=1)
+    if(!possibleDelimiters.empty())
     {
         return possibleDelimiters.first();
     }
@@ -45,7 +46,7 @@ QString text_helper::autoDetectDelimiter(QTextStream& stream)
     return delimiters[0];
 }
 
-bool text_helper::firstColumnIsIncrimental(QTextStream& stream, QString delimiter)
+bool text_helper::firstColumnIsIncrimental(QTextStream& stream, const QString& delimiter)
 {
     qint64 streamStartingPosition = stream.pos();
     double firstColumnValue, prevFirstColumnValue = 0;
@@ -80,7 +81,7 @@ bool text_helper::firstColumnIsIncrimental(QTextStream& stream, QString delimite
     return firstColumnIsIncrimental;
 }
 
-QString text_helper::cleanDateTimeString(QString rawDate, QString rawTime)
+QString text_helper::cleanDateTimeString(const QString& rawDate, const QString& rawTime)
 {
     //Really dumb, but the best thing I can think of :/
     QString workString = " ";
@@ -98,7 +99,7 @@ QString text_helper::cleanDateTimeString(QString rawDate, QString rawTime)
     return workString;
 }
 
-void text_helper::checkAndProcessColumnHeaders( QTextStream& stream, QString delimiter, QList<QVariantMap> &metaData, int firstDataColumn  )
+void text_helper::checkAndProcessColumnHeaders( QTextStream& stream, const QString& delimiter, QList<QVariantMap> &metaData, int firstDataColumn  )
 {
     qint64 streamStartingPosition = stream.pos();
 
@@ -156,7 +157,7 @@ QString text_helper::versionIntToString(int version)
     return versionString.insert(4,".");
 }
 
-bool text_helper::isVersionOk(QString minVersion, QString maxVersion, QString readVersion)
+bool text_helper::isVersionOk(QString minVersion, QString maxVersion, const QString& readVersion)
 {
     if( (versionStringToInt(readVersion) <= versionStringToInt(maxVersion)) && (versionStringToInt(readVersion) >= versionStringToInt(minVersion)) )
         return true;
@@ -164,7 +165,7 @@ bool text_helper::isVersionOk(QString minVersion, QString maxVersion, QString re
         return false;
 }
 
-int text_helper::estimateLineCount( QString fileName )
+int text_helper::estimateLineCount( const QString& fileName )
 {
     QFile file(fileName);
     qint64 fileStartingPosition = 0;
@@ -188,7 +189,7 @@ int text_helper::estimateLineCount( QString fileName )
 
         if(lineCount < 150)
             return lineCount;
-        else
+        
             return int((file.size() * 100) / byteCount);
     }
     return 0;
@@ -200,10 +201,8 @@ void text_helper::insertDataBreak(double dateTime, QVector<QVector<double> > &se
     seriesData.first().append(dateTime);
 
     //Iterate through meta data and append data as needed
-    for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
+    for(auto & mData : metaData)
     {
-        QVariantMap& mData = metaData[metaDataIndex];
-
         if(mData.contains("Data Type"))
         {
             if(mData.value("Data Type") == "Series")

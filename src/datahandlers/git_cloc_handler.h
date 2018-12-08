@@ -22,7 +22,7 @@ public:
     void addToSystemMenu(QMenu *menu, QCustomPlot* plot);
     QPushButton *addToMessageBox(QMessageBox &msgBox, QCustomPlot* plot);
     void addToContextMenu(QMenu *menu, QCustomPlot* plot);
-    void dataImport(QVariantMap modifier);
+    void dataImport(const QVariantMap& modifier);
 
 public slots:
     void updateAxis(QCustomPlot *plot);
@@ -36,7 +36,7 @@ private slots:
     void dataExport(QVariantMap modifier);
 
 private:
-    void openSqlFile(QString fileName);
+    void openSqlFile(const QString& fileName);
     void processLineFromFile(QString line, QString delimiter, QList<QVariantMap> &metaData);
     void connectToClocDatabase(QSqlDatabase *clocData);
 

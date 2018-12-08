@@ -2,6 +2,7 @@
 
 #include <QInputDialog>
 #include <QSettings>
+#include <utility>
 
 void influxdb_handler::setInfluxAddress(QUrl url)
 {
@@ -25,7 +26,7 @@ void influxdb_handler::addToSystemMenu(QMenu *menu, QCustomPlot* plot)
 
 void influxdb_handler::addToContextMenu(QMenu *menu, QCustomPlot* plot)
 {
-    if( contextMenu.isEmpty() || (plot->selectedPlottables().size() > 0) )
+    if( contextMenu.isEmpty() || (!plot->selectedPlottables().empty()) )
         return;
 
     influxPlot = plot;
@@ -63,7 +64,7 @@ void influxdb_handler::menuConfigure()
  void influxdb_handler::dataPlot()
  {
      // make sure this slot is really called by a context menu action, so it carries the data we need
-     if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+     if (auto* contextAction = qobject_cast<QAction*>(sender()))
      {
          QVariantMap selectionData = contextAction->data().toMap();
          QCustomPlot* plot = static_cast <QCustomPlot*>(selectionData["Active Plot"].value<void *>());
@@ -172,7 +173,7 @@ bool influxdb_handler::eventFilter(QObject* object,QEvent* event)
 {
     if ( event->type() == QEvent::MouseButtonRelease )
     {
-        QMenu *objectMenu = qobject_cast<QMenu*>(object);
+        auto *objectMenu = qobject_cast<QMenu*>(object);
 
         //Check if object is actually a menu
         if(objectMenu != nullptr)
@@ -201,7 +202,7 @@ bool influxdb_handler::eventFilter(QObject* object,QEvent* event)
     return false;
 }
 
-QJsonDocument influxdb_handler::query(QUrlQuery urlQuery)
+QJsonDocument influxdb_handler::query(const QUrlQuery& urlQuery)
 {
     influxAddress.setQuery(urlQuery);
 

@@ -34,7 +34,7 @@ QPushButton *csv_handler::addToMessageBox(QMessageBox &msgBox, QCustomPlot* plot
 //Can probably make this generic
 void csv_handler::addToContextMenu(QMenu *menu, QCustomPlot* plot)
 {
-    if( metaData.isEmpty() || (plot->selectedPlottables().size() > 0) )
+    if( metaData.isEmpty() || (!plot->selectedPlottables().empty()) )
         return;
 
     QVariantMap menuActionMap;
@@ -111,7 +111,7 @@ void csv_handler::addToContextMenu(QMenu *menu, QCustomPlot* plot)
     }
 }
 
-void csv_handler::dataImport(QVariantMap modifier)
+void csv_handler::dataImport(const QVariantMap& modifier)
 {
     QFileInfo fileName = QFileInfo(modifier.value("File Name").toString());
     if(fileName.exists())
@@ -145,7 +145,7 @@ bool csv_handler::eventFilter(QObject* object,QEvent* event)
 {
     if ( event->type() == QEvent::MouseButtonRelease )
     {
-        QMenu *objectMenu = qobject_cast<QMenu*>(object);
+        auto *objectMenu = qobject_cast<QMenu*>(object);
 
         //Check if object is actually a menu
         if(objectMenu != nullptr)
@@ -176,7 +176,7 @@ bool csv_handler::eventFilter(QObject* object,QEvent* event)
 
 void csv_handler::menuDataImport()
 {
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap modifier = contextAction->data().toMap();
         QSettings settings;
@@ -197,7 +197,7 @@ void csv_handler::menuDataImport()
 void csv_handler::dataPlot()
 {
     // make sure this slot is really called by a context menu action, so it carries the data we need
-    if (QAction* contextAction = qobject_cast<QAction*>(sender()))
+    if (auto* contextAction = qobject_cast<QAction*>(sender()))
     {
         QVariantMap selectionData = contextAction->data().toMap();
         QCustomPlot* plot = static_cast <QCustomPlot*>(selectionData["Active Plot"].value<void *>());
@@ -225,7 +225,7 @@ void csv_handler::dataExport(QVariantMap modifier)
     Q_UNUSED(modifier);
 }
 
-void csv_handler::openDelimitedFile(QString fileName)
+void csv_handler::openDelimitedFile(const QString& fileName)
 {
     int estimatedLineCount = th.estimateLineCount(fileName);
 
@@ -321,7 +321,7 @@ void csv_handler::openDelimitedFile(QString fileName)
     }
 }
 
-void csv_handler::processLineFromFile(QString line, QString delimiter, int dataKeyColumn, int metaDataIndexStart, QList<QVariantMap> &metaData)
+void csv_handler::processLineFromFile(const QString& line, const QString& delimiter, int dataKeyColumn, int metaDataIndexStart, QList<QVariantMap> &metaData)
 {
     QStringList strings = line.split(delimiter);
 
@@ -338,7 +338,7 @@ void csv_handler::processLineFromFile(QString line, QString delimiter, int dataK
     //Iterate through meta data and append data as needed
     for(int metaDataIndex = metaDataIndexStart; metaDataIndex < metaData.size(); metaDataIndex++)
     {
-        QVariantMap metaDataAtIndex = metaData.at(metaDataIndex);
+        const QVariantMap& metaDataAtIndex = metaData.at(metaDataIndex);
 
         if(metaDataAtIndex.contains("Data Type"))
         {

@@ -7,14 +7,14 @@ int main(int argc, char *argv[])
 
     QTranslator qtTranslator;
     qtTranslator.load(":/qttranslations/qt_" + QLocale::system().name());
-    a.installTranslator(&qtTranslator);
+    QApplication::installTranslator(&qtTranslator);
 
     QTranslator myappTranslator;
     myappTranslator.load(":/translations/translation_" + QLocale::system().name());
-    a.installTranslator(&myappTranslator);
+    QApplication::installTranslator(&myappTranslator);
 
     smart_plot w;
     w.show();
 
-    return a.exec();
+    return QApplication::exec();
 }

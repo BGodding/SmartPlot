@@ -38,18 +38,18 @@ private:
     void generateMetaData();
 
     void setInfluxAddress(QUrl url);
-    QJsonDocument query(QUrlQuery urlQuery);
+    QJsonDocument query(const QUrlQuery& urlQuery);
 
     QVector<QVector<double> > seriesData;
     QVector<QVector<QString> > eventData;
     QList<QVariantMap> metaData;
 
-    int maxVerticalEvents;
+    int maxVerticalEvents{};
     QUrl influxAddress;
 
     QMenu contextMenu;
 
-    QCustomPlot* influxPlot;
+    QCustomPlot* influxPlot{};
 
     axis_handler ah;
     plot_handler ph;

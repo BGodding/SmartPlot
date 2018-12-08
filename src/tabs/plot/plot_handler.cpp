@@ -56,7 +56,7 @@ QCPGraph *plot_handler::addPlotLine(QVector<QVector<double> > &dataVector, QVari
     return addPlotLine(reducedKeyData, reducedValueData, metaData.value("Key Field").toString(), customPlot);
 }
 
-QCPGraph *plot_handler::addPlotLine(QVector<double> &key, QVector<double> &value, QString name, QCustomPlot *plot)
+QCPGraph *plot_handler::addPlotLine(QVector<double> &key, QVector<double> &value, const QString& name, QCustomPlot *plot)
 {
     //Code here for graphing
     QCPGraph *newPlot = plot->addGraph();
@@ -79,7 +79,7 @@ QCPGraph *plot_handler::addPlotLine(QVector<double> &key, QVector<double> &value
     return newPlot;
 }
 
-QCPGraph *plot_handler::addPlotLine(QCPGraphDataContainer *dataMap, QString name, QCustomPlot *plot)
+QCPGraph *plot_handler::addPlotLine(QCPGraphDataContainer *dataMap, const QString& name, QCustomPlot *plot)
 {
     //Code here for graphing
     QCPGraph *newPlot = plot->addGraph();
@@ -105,7 +105,7 @@ QCPGraph *plot_handler::addPlotLine(QCPGraphDataContainer *dataMap, QString name
     return newPlot;
 }
 
-void plot_handler::plotConvert( QCPGraph *graph, QString functionString )
+void plot_handler::plotConvert( QCPGraph *graph, const QString& functionString )
 {
     QCPGraphDataContainer::iterator plotData = graph->data()->begin();
 
@@ -162,17 +162,17 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
         {
             if(metaData.value("Interval Type") == "Second")
                 break;
-            else
+            
                 periodBegin -= currentDataKey_qDateTime.time().second();
 
             if(metaData.value("Interval Type") == "Minute")
                 break;
-            else
+            
                 periodBegin -= currentDataKey_qDateTime.time().minute()*60;
 
             if(metaData.value("Interval Type") == "Hour")
                 break;
-            else
+            
                 periodBegin -= currentDataKey_qDateTime.time().hour()*3600;
 
             if(metaData.value("Interval Type") == "Day")
@@ -251,7 +251,7 @@ void plot_handler::plotAddPeriodicReport(QCPGraph *graph, QVariantMap metaData)
     if(x.isEmpty() || y.isEmpty())
         return;
 
-    QCPBars *periodic = new QCPBars(activePlot->xAxis, activePlot->yAxis);
+    auto *periodic = new QCPBars(activePlot->xAxis, activePlot->yAxis);
     periodic->setName(graph->name());
     periodic->setSelectable(QCP::stWhole);
 

@@ -18,11 +18,11 @@ public:
 
     void updateGraphAxes(QCustomPlot *plot);
     void updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, QVector<QVector<QString> > &eventData, QMap<QString, QMap<int, QString> > &tickLabelLookup, QVector<double> &datetime, QCPAxis *axis, int maxVerticalEvents);
-    void updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, QJsonDocument jsondoc, QCPAxis *axis, int maxVerticalEvents);
+    void updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, const QJsonDocument& jsondoc, QCPAxis *axis, int maxVerticalEvents);
     void updateAxisTickCount(QCustomPlot *customPlot, QWidget *window);
 
     bool isEventVisible(QList<QVariantMap> &metaData, QVector<QVector<QString> > &eventData, int row, QString &tickLabel );
-    bool isEventVisible(QList<QVariantMap> &metaData, QJsonArray eventData, QString &tickLabel );
+    bool isEventVisible(QList<QVariantMap> &metaData, const QJsonArray& eventData, QString &tickLabel );
     bool isActionVisible(QVariantMap &selectionData, QList<QVariantMap> &metaData);
 
     void toggleKeyValueVisibleInList(QVariantMap &selectionData, QList<QVariantMap> &metaData);
@@ -34,7 +34,7 @@ public:
     bool isAxisTypeSelected(QCustomPlot *customPlot, QCPAxis::AxisType type);
 
     void setAxisSelected(QCPAxis* axis);
-    void setAxesSelected(QList<QCPAxis*> axis);
+    void setAxesSelected(const QList<QCPAxis*>& axis);
     void setAxesSelected(QCustomPlot *plot, QCPAxis::AxisType type);
     void setAxisType(QCPAxis *axis, tickerType type);
     void toggleAxisType(QCPAxis *axis);

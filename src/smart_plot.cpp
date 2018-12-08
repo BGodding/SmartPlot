@@ -8,7 +8,7 @@
 smart_plot::smart_plot(QWidget *parent) :
     QMainWindow(parent)
 {
-    myUrlHandler *myHandler = new myUrlHandler();
+    auto *myHandler = new myUrlHandler();
     QDesktopServices::setUrlHandler("file", myHandler, "files");
     connect(myHandler, SIGNAL(openFile(const QString&)), this, SLOT( iosOpen(const QString &)));
 
@@ -27,7 +27,7 @@ smart_plot::smart_plot(QWidget *parent) :
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
 
     //Data Handlers: Add menu calls here
-    csvHandler.addToSystemMenu(fileMenu, activePlot());  
+    csvHandler.addToSystemMenu(fileMenu, activePlot());
     gitClocHandler.addToSystemMenu(fileMenu, activePlot());
     //influxdbHandler.addToSystemMenu(fileMenu, activePlot());
 
@@ -68,7 +68,7 @@ void smart_plot::zoomInButtonPressed()
     int axisIndex = 0;
     while(axisIndex < axes.size())
     {
-        if ( (activePlot()->selectedAxes().size() == 0) || axisHandler.isAxisSelected( axes.value(axisIndex) ) )
+        if ( (activePlot()->selectedAxes().empty()) || axisHandler.isAxisSelected( axes.value(axisIndex) ) )
         {
             axes.value(axisIndex)->scaleRange(.5,axes.value(axisIndex)->range().center());
         }
@@ -84,7 +84,7 @@ void smart_plot::zoomOutButtonPressed()
     int axisIndex = 0;
     while(axisIndex < axes.size())
     {
-        if ( (activePlot()->selectedAxes().size() == 0) || axisHandler.isAxisSelected( axes.value(axisIndex) ) )
+        if ( (activePlot()->selectedAxes().empty()) || axisHandler.isAxisSelected( axes.value(axisIndex) ) )
         {
             axes.value(axisIndex)->scaleRange(1.5,axes.value(axisIndex)->range().center());
         }
@@ -191,7 +191,7 @@ void smart_plot::mousePress(QMouseEvent *event)
 
         if(plottable)
         {
-            QCPGraph *graph = qobject_cast<QCPGraph*>(plottable);
+            auto *graph = qobject_cast<QCPGraph*>(plottable);
             plot_analytics analytics;
             plotStats stats;
 
@@ -241,14 +241,14 @@ void smart_plot::mousePress(QMouseEvent *event)
                             quint32 timeDelta = qAbs(mouseKey-prevKey);
 
                             // add the bracket at the top:
-                            QCPItemBracket *bracket = new QCPItemBracket(activePlot());
+                            auto *bracket = new QCPItemBracket(activePlot());
                             bracket->left->setAxes(graph->keyAxis(), graph->valueAxis());
                             bracket->left->setCoords(prevKey, value);
                             bracket->right->setAxes(graph->keyAxis(), graph->valueAxis());
                             bracket->right->setCoords(mouseKey, value);
 
                             // add the text label at the top:
-                            QCPItemText *wavePacketText = new QCPItemText(activePlot());
+                            auto *wavePacketText = new QCPItemText(activePlot());
                             wavePacketText->position->setParentAnchor(bracket->center);
                             wavePacketText->position->setCoords(0, -10); // move 10 pixels to the top from bracket center anchor
                             wavePacketText->setPositionAlignment(Qt::AlignBottom|Qt::AlignHCenter);
@@ -357,7 +357,7 @@ void smart_plot::contextMenuRequest(QPoint pos)
 void smart_plot::titleDoubleClick(QMouseEvent* event)
 {
   Q_UNUSED(event)
-  if (QCPTextElement *title = qobject_cast<QCPTextElement*>(sender()))
+  if (auto *title = qobject_cast<QCPTextElement*>(sender()))
   {
     // Set the plot title by double clicking on it
     bool ok;
@@ -403,7 +403,7 @@ void smart_plot::legendDoubleClick(QCPLegend *legend, QCPAbstractLegendItem *ite
     if (item)
     {
         bool ok;
-        QCPPlottableLegendItem *plItem = qobject_cast<QCPPlottableLegendItem*>(item);
+        auto *plItem = qobject_cast<QCPPlottableLegendItem*>(item);
         QString newName = QInputDialog::getText(this, tr("SmartPlot"), tr("New graph name:"), QLineEdit::Normal, plItem->plottable()->name(), &ok, (Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint));
         if (ok)
         {
@@ -415,7 +415,7 @@ void smart_plot::legendDoubleClick(QCPLegend *legend, QCPAbstractLegendItem *ite
 
 void smart_plot::iosOpen(const QString & fileName)
 {
-    if ( (fileName.isEmpty() == false) )// && (str.contains(".CSV")) )
+    if ( !fileName.isEmpty() )// && (str.contains(".CSV")) )
     {
         url = fileName;
     }
@@ -449,7 +449,7 @@ bool smart_plot::eventFilter(QObject* object,QEvent* event)
 
     if ( event->type() == QEvent::MouseButtonRelease )
     {
-        QMenu *objectMenu = qobject_cast<QMenu*>(object);
+        auto *objectMenu = qobject_cast<QMenu*>(object);
 
         //Check if object is actually a menu
         if(objectMenu != nullptr)
@@ -468,7 +468,7 @@ bool smart_plot::eventFilter(QObject* object,QEvent* event)
     }
     else if ( event->type() == QEvent::KeyPress )
     {
-        int key = static_cast<QKeyEvent*>(event)->key();
+        int key = dynamic_cast<QKeyEvent*>(event)->key();
         if(key == Qt::Key_F11)
         {
             if(!this->isFullScreen())
@@ -480,7 +480,7 @@ bool smart_plot::eventFilter(QObject* object,QEvent* event)
     }
     else if( event->type() == QEvent::Gesture)
     {
-        QGestureEvent *gestureEve = static_cast<QGestureEvent*>(event);
+        auto *gestureEve = dynamic_cast<QGestureEvent*>(event);
         if( QGesture *tapAndHold = gestureEve->gesture(Qt::TapAndHoldGesture) )
         {
             if( (contextMenu != nullptr) && !contextMenu->isVisible())
@@ -513,7 +513,7 @@ QCustomPlot* smart_plot::activePlot()
 
     if( (currentTab >=0) && (currentTab < plots.size()))
         return plots.value(currentTab);
-    else if (!plots.isEmpty())
+    if (!plots.isEmpty())
         return plots.first();
     else
         return nullptr;

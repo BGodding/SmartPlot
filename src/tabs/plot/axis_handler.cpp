@@ -145,7 +145,7 @@ void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, Q
     plot->replot();
 }
 
-void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, QJsonDocument jsondoc, QCPAxis *axis, int maxVerticalEvents)
+void axis_handler::updateAxis(QCustomPlot *plot, QList<QVariantMap> &metaData, const QJsonDocument& jsondoc, QCPAxis *axis, int maxVerticalEvents)
 {
     Q_UNUSED(*axis);
 
@@ -310,10 +310,8 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QVector<QVector<
     targetMap["Active"] = true;
 
     //Iterate through all the event data sources
-    for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
+    for(auto metaDataAtIndex : metaData)
     {
-        QVariantMap metaDataAtIndex = metaData.at(metaDataIndex);
-
         if( metaDataAtIndex.value("Data Type")=="Event" )
         {
             QList<QVariant> uniqueEventMetaData = metaDataAtIndex.value("Unique Event Meta Data").toList();
@@ -350,17 +348,15 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QVector<QVector<
     return visible;
 }
 
-bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QJsonArray eventData, QString &tickLabel )
+bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, const QJsonArray& eventData, QString &tickLabel )
 {
     bool visible = false;
 
     QVariantMap targetMap;
     targetMap["Active"] = true;
 
-    for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
+    for(auto metaDataAtIndex : metaData)
     {
-        QVariantMap metaDataAtIndex = metaData.at(metaDataIndex);
-
         if( metaDataAtIndex.value("Data Type")=="Event" )
         {
             QList<QVariant> uniqueEventMetaData = metaDataAtIndex.value("Unique Event Meta Data").toList();
@@ -397,10 +393,8 @@ bool axis_handler::isEventVisible(QList<QVariantMap> &metaData, QJsonArray event
 
 bool axis_handler::isActionVisible(QVariantMap &selectionData, QList<QVariantMap> &metaData)
 {
-    for(int metaDataIndex = 0; metaDataIndex < metaData.size(); metaDataIndex++)
+    for(auto metaDataAtIndex : metaData)
     {
-        QVariantMap metaDataAtIndex = metaData.at(metaDataIndex);
-
         if( (metaDataAtIndex.value("Series") == selectionData.value("Series")) &&
             (metaDataAtIndex.value("Measurement") == selectionData.value("Measurement")) )
         {
@@ -408,9 +402,9 @@ bool axis_handler::isActionVisible(QVariantMap &selectionData, QList<QVariantMap
 
             //qDebug() << selectionData.value("Series") << selectionData.value("Measurement") << selectionData.value("Key Field") << selectionData.value("Key Value");
 
-            for(int uniqueEventMetaDataIndex = 0; uniqueEventMetaDataIndex < uniqueEventMetaData.size(); uniqueEventMetaDataIndex++)
+            for(const auto & uniqueEventMetaDataIndex : uniqueEventMetaData)
             {
-                QVariantMap mData = uniqueEventMetaData.at(uniqueEventMetaDataIndex).toMap();
+                QVariantMap mData = uniqueEventMetaDataIndex.toMap();
 
                 if( (mData.value("Key Value") == selectionData.value("Key Value")) && (mData.value("Key Field") == selectionData.value("Key Field")) )
                     return mData.value("Active").toBool();
@@ -425,10 +419,8 @@ void axis_handler::toggleKeyValueVisibleInList(QVariantMap &selectionData, QList
     if(!selectionData.contains("Key Value"))
         return;
 
-    for(int measurementMetaDataIndex = 0; measurementMetaDataIndex < metaData.size(); measurementMetaDataIndex++)
+    for(auto & keyFieldMetaData : metaData)
     {
-        QVariantMap& keyFieldMetaData = metaData[measurementMetaDataIndex];
-
         if( (keyFieldMetaData.value("Series") == selectionData.value("Series")) &&
             (keyFieldMetaData.value("Measurement") == selectionData.value("Measurement")) )
         {
@@ -470,10 +462,8 @@ void axis_handler::toggleKeyFieldVisibleInList(QVariantMap &selectionData, QList
     if(selectionData.contains("Key Value"))
         return;
 
-    for(int measurementMetaDataIndex = 0; measurementMetaDataIndex < metaData.size(); measurementMetaDataIndex++)
+    for(auto & metaDataAtIndex : metaData)
     {
-        QVariantMap& metaDataAtIndex = metaData[measurementMetaDataIndex];
-
         if( (metaDataAtIndex.value("Series") == selectionData.value("Series")) &&
             (metaDataAtIndex.value("Measurement") == selectionData.value("Measurement")) &&
             (metaDataAtIndex.value("Key Field") == selectionData.value("Key Field")) )
@@ -539,7 +529,7 @@ void axis_handler::setAxisSelected(QCPAxis* axis)
     axis->setSelectedParts(QCPAxis::spAxis|QCPAxis::spTickLabels);
 }
 
-void axis_handler::setAxesSelected(QList<QCPAxis*> axis)
+void axis_handler::setAxesSelected(const QList<QCPAxis*>& axis)
 {
     int axisIndex = 0;
     while(axisIndex < axis.size())
