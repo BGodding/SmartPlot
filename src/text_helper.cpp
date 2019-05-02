@@ -122,7 +122,7 @@ void text_helper::checkAndProcessColumnHeaders( QTextStream &stream, const QStri
             }
         } else {
             //Use column number as the header
-            variantMap["Key Field"] = "";
+            variantMap["Key Field"] = QString(tr("Column ")) + QString::number(column);
             variantMap["Data Source"] = column;
         }
 
