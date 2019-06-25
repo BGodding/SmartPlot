@@ -2,6 +2,8 @@
 
 #include "utility.h"
 
+csv_handler* csv_handler::myself;
+
 csv_handler::csv_handler()
 {
 #ifdef MOBILE
@@ -13,6 +15,7 @@ csv_handler::csv_handler()
     maxPlotSize = 500000;
     dataDeadTime = 600;
 #endif
+    csv_handler::myself = this;
 }
 
 void csv_handler::addToSystemMenu(QMenu *menu, QCustomPlot *plot)
@@ -125,6 +128,28 @@ void csv_handler::dataImport(const QVariantMap &modifier)
     }
 }
 
+void csv_handler::dataImportStream(const QString &fileString)
+{
+    QFileInfo fileName = fileString;
+    if (fileName.exists()) {
+        if (!metaData.isEmpty()) {
+            if ( QMessageBox::question(nullptr, tr("File Already Open"), tr("Add data to existing dataset?")) == QMessageBox::No) {
+                seriesData.clear();
+                eventData.clear();
+                tickLabelLookup.clear();
+                metaData.clear();
+            }
+        }
+
+        openDelimitedFile(fileString);
+
+        generateUniqueLists(&eventData, metaData);
+
+//        QCustomPlot *plot = (QCustomPlot *)modifier.value("Active Plot").value<void *>();
+//        ah.setAxisType(plot->xAxis, axis_handler::fixed);
+    }
+}
+
 void csv_handler::updateAxis(QCustomPlot *plot)
 {
     ah.updateAxis(plot, metaData, eventData, tickLabelLookup, seriesData.first(), plot->xAxis2, maxVerticalEvents);
@@ -159,21 +184,25 @@ bool csv_handler::eventFilter(QObject *object, QEvent *event)
     return false;
 }
 
+void csv_handler::getFileContents(const QString &fileString, const QByteArray &fileArray)
+{
+    qDebug() << fileString << fileArray;
+    if (!fileString.isEmpty()) {
+//        //Remember directory
+        QSettings settings;
+        settings.setValue("CSV Handler Source Directory", fileString);
+        //modifier["File Name"] = fileString;
+    }
+    myself->dataImportStream(fileString);
+}
+
+
 void csv_handler::menuDataImport()
 {
     if (auto *contextAction = qobject_cast<QAction *>(sender())) {
         QVariantMap modifier = contextAction->data().toMap();
         QSettings settings;
-
-        QString fileName = QFileDialog::getOpenFileName (nullptr, tr("Open Delimited Text file"),
-                                                         settings.value("CSV Handler Source Directory").toString(), "TEXT (*.txt);;CSV (*.csv);;ANY (*.*)");
-        if (!fileName.isEmpty()) {
-            //Remember directory
-            settings.setValue("CSV Handler Source Directory", QFileInfo(fileName).absolutePath());
-            modifier["File Name"] = fileName;
-
-            dataImport(modifier);
-        }
+        QFileDialog::getOpenFileContent ("TEXT (*.txt);;CSV (*.csv);;ANY (*.*)", getFileContents);
     }
 }
 

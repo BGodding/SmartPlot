@@ -19,6 +19,8 @@ public:
     QPushButton *addToMessageBox(QMessageBox &msgBox, QCustomPlot *plot);
     void addToContextMenu(QMenu *menu, QCustomPlot *plot);
     void dataImport(const QVariantMap &modifier);
+    void dataImportStream(const QString &fileString);
+    static void getFileContents(const QString &fileString, const QByteArray &fileArray);
 
 public slots:
     void updateAxis(QCustomPlot *plot);
@@ -90,6 +92,8 @@ private:
     int maxVerticalEvents;
     int maxPlotSize;
     int dataDeadTime;
+
+    static csv_handler *myself;
 };
 
 #endif // csv_handler
