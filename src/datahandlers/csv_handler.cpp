@@ -119,7 +119,7 @@ void csv_handler::dataImport(const QVariantMap &modifier)
             }
         }
 
-        openDelimitedFile(fileName.absoluteFilePath());
+        openDelimitedFile(fileName.absoluteFilePath(), NULL);
 
         generateUniqueLists(&eventData, metaData);
 
@@ -128,7 +128,7 @@ void csv_handler::dataImport(const QVariantMap &modifier)
     }
 }
 
-void csv_handler::dataImportStream(const QString &fileString)
+void csv_handler::dataImportStream(const QString &fileString, const QByteArray &fileArray)
 {
     QFileInfo fileName = fileString;
     if (fileName.exists()) {
@@ -141,7 +141,7 @@ void csv_handler::dataImportStream(const QString &fileString)
             }
         }
 
-        openDelimitedFile(fileString);
+        openDelimitedFile(fileString, fileArray);
 
         generateUniqueLists(&eventData, metaData);
 
@@ -193,7 +193,7 @@ void csv_handler::getFileContents(const QString &fileString, const QByteArray &f
         settings.setValue("CSV Handler Source Directory", fileString);
         //modifier["File Name"] = fileString;
     }
-    myself->dataImportStream(fileString);
+    myself->dataImportStream(fileString, fileArray);
 }
 
 
@@ -233,7 +233,7 @@ void csv_handler::dataExport(QVariantMap modifier)
     Q_UNUSED(modifier);
 }
 
-void csv_handler::openDelimitedFile(const QString &fileName)
+void csv_handler::openDelimitedFile(const QString &fileName, const QByteArray &fileData)
 {
     int estimatedLineCount = th.estimateLineCount(fileName);
 
@@ -243,81 +243,96 @@ void csv_handler::openDelimitedFile(const QString &fileName)
     int firstDataColumn = 0;
     int startingMetaDatalistIndex = metaData.size();
     int metaDatalistIndex = startingMetaDatalistIndex;
+    QTextStream textStream;
+    QByteArray temp = fileData;
+    QBuffer buffer(&temp);
+//    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+//    {
+//        textStream.setDevice(&file);
+//        qDebug() << "Opening as file";
+//    } else
+        if (!fileData.isEmpty()) {
+        qDebug() << "Opening as data array";
 
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream textStream(&file);
-        textStream.setAutoDetectUnicode(true);
+        qDebug() << buffer.data();
+        buffer.open(QIODevice::ReadOnly | QIODevice::Text);
+        textStream.setDevice(&buffer);
+    } else {
+        qDebug() << "Failed to open as anything";
+        return;
+    }
 
-        QProgressDialog progress(tr("Importing Data"), tr("Cancel"), 0, int(file.size()), nullptr, (Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint));
-        progress.setWindowModality(Qt::WindowModal);
-        progress.setMinimumDuration(0);
+    textStream.setAutoDetectUnicode(true);
 
-        // Determine the delimiter
-        delimiter = th.autoDetectDelimiter(textStream);
+    QProgressDialog progress(tr("Importing Data"), tr("Cancel"), 0, int(file.size()), nullptr, (Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint));
+    progress.setWindowModality(Qt::WindowModal);
+    progress.setMinimumDuration(0);
 
-        // Check if the first column looks like a key axis (all values increasing)
-        if (th.firstColumnIsIncrimental(textStream, delimiter)) {
-            if ( QMessageBox::question(nullptr, tr("Key Axis Found"), tr("Use first column as key axis?")) == QMessageBox::Yes)
-                firstDataColumn = 1;
-        }
+    // Determine the delimiter
+    delimiter = th.autoDetectDelimiter(textStream);
 
-        // This function grabs the first line of the file and uses it for naming data columns
-        th.checkAndProcessColumnHeaders( textStream, delimiter, metaData, firstDataColumn );
+    // Check if the first column looks like a key axis (all values increasing)
+    if (th.firstColumnIsIncrimental(textStream, delimiter)) {
+        if ( QMessageBox::question(nullptr, tr("Key Axis Found"), tr("Use first column as key axis?")) == QMessageBox::Yes)
+            firstDataColumn = 1;
+    }
 
-        // The data keys are always store in the series data
-        int dataKeyColumn = seriesData.size();
+    // This function grabs the first line of the file and uses it for naming data columns
+    th.checkAndProcessColumnHeaders( textStream, delimiter, metaData, firstDataColumn );
 
-        while (!textStream.atEnd() && !progress.wasCanceled()) {
-            line = QString(textStream.readLine());
+    // The data keys are always store in the series data
+    int dataKeyColumn = seriesData.size();
 
-            //Refreshing the bar after every line is excessive
-            if (estimatedLineCount % 1000 == 0)
-                progress.setValue(int(file.pos()));
+    while (!textStream.atEnd() && !progress.wasCanceled()) {
+        line = QString(textStream.readLine());
 
-            // Throw away lines with no useful data
-            if (!line.isEmpty() && !line.startsWith(QChar::Null)) {
-                // Throw away lines if the file appears to be larger than the max allowed size
-                if ( maxPlotSize < estimatedLineCount-- )
-                    continue;
+        //Refreshing the bar after every line is excessive
+        if (estimatedLineCount % 1000 == 0)
+            progress.setValue(int(file.pos()));
 
-                if (metaDatalistIndex != metaData.size()) {
-                    QStringList strings = line.split(delimiter);
-                    bool ok;
+        // Throw away lines with no useful data
+        if (!line.isEmpty() && !line.startsWith(QChar::Null)) {
+            // Throw away lines if the file appears to be larger than the max allowed size
+            if ( maxPlotSize < estimatedLineCount-- )
+                continue;
 
-                    //Add column for date/time
-                    QVector<double> tempVector;
-                    seriesData.append(tempVector);
+            if (metaDatalistIndex != metaData.size()) {
+                QStringList strings = line.split(delimiter);
+                bool ok;
 
-                    for (; metaDatalistIndex < metaData.size(); metaDatalistIndex++) {
-                        QVariantMap &mData = metaData[metaDatalistIndex];
+                //Add column for date/time
+                QVector<double> tempVector;
+                seriesData.append(tempVector);
 
-                        QString targetString = strings.value(mData.value("Data Source").toInt());
-                        // Here we make the assumption that if the first value for the column is
-                        // non-numerical the column contains events (string data)
-                        (void)targetString.toDouble(&ok);
-                        if (ok) {
-                            QVector<double> tempVector;
-                            seriesData.append(tempVector);
-                            mData.insert( "Data Type", "Series" );
-                            mData.insert( "Data Value Storage Index", (seriesData.size() - 1) );
-                            mData.insert( "Data Key Storage Index", dataKeyColumn );
-                        } else {
-                            QVector<QString> tempVector;
-                            eventData.append(tempVector);
-                            mData.insert( "Data Type", "Event" );
-                            mData.insert( "Data Value Storage Index", (eventData.size() - 1) );
-                            mData.insert( "Data Key Storage Index", dataKeyColumn );
-                            mData.insert( "Action", "OR");
-                            mData.insert( "Tick Label", true);
-                        }
+                for (; metaDatalistIndex < metaData.size(); metaDatalistIndex++) {
+                    QVariantMap &mData = metaData[metaDatalistIndex];
+
+                    QString targetString = strings.value(mData.value("Data Source").toInt());
+                    // Here we make the assumption that if the first value for the column is
+                    // non-numerical the column contains events (string data)
+                    (void)targetString.toDouble(&ok);
+                    if (ok) {
+                        QVector<double> tempVector;
+                        seriesData.append(tempVector);
+                        mData.insert( "Data Type", "Series" );
+                        mData.insert( "Data Value Storage Index", (seriesData.size() - 1) );
+                        mData.insert( "Data Key Storage Index", dataKeyColumn );
+                    } else {
+                        QVector<QString> tempVector;
+                        eventData.append(tempVector);
+                        mData.insert( "Data Type", "Event" );
+                        mData.insert( "Data Value Storage Index", (eventData.size() - 1) );
+                        mData.insert( "Data Key Storage Index", dataKeyColumn );
+                        mData.insert( "Action", "OR");
+                        mData.insert( "Tick Label", true);
                     }
                 }
-
-                processLineFromFile(line, delimiter, dataKeyColumn, startingMetaDatalistIndex, metaData );
             }
+
+            processLineFromFile(line, delimiter, dataKeyColumn, startingMetaDatalistIndex, metaData );
         }
-        file.close();
     }
+    file.close();
 }
 
 void csv_handler::processLineFromFile(const QString &line, const QString &delimiter, int dataKeyColumn, int metaDataIndexStart, QList<QVariantMap> &metaData)

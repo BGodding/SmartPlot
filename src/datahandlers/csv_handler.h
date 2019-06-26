@@ -19,7 +19,7 @@ public:
     QPushButton *addToMessageBox(QMessageBox &msgBox, QCustomPlot *plot);
     void addToContextMenu(QMenu *menu, QCustomPlot *plot);
     void dataImport(const QVariantMap &modifier);
-    void dataImportStream(const QString &fileString);
+    void dataImportStream(const QString &fileString, const QByteArray &fileArray);
     static void getFileContents(const QString &fileString, const QByteArray &fileArray);
 
 public slots:
@@ -34,7 +34,7 @@ private slots:
     void dataExport(QVariantMap modifier);
 
 private:
-    void openDelimitedFile(const QString &fileName);
+    void openDelimitedFile(const QString &fileName, const QByteArray &fileData);
     void processLineFromFile(const QString &line, const QString &delimiter, int dataKeyColumn, int metaDataIndexStart, QList<QVariantMap> &metaData);
 //  Series data vectors are stored so the sub vector contains all data in a column
 //  This works well as we often want to take and plot a column of data
