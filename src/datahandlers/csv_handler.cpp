@@ -131,7 +131,7 @@ void csv_handler::dataImport(const QVariantMap &modifier)
 void csv_handler::dataImportStream(const QString &fileString, const QByteArray &fileArray)
 {
     QFileInfo fileName = fileString;
-    if (fileName.exists()) {
+    if (fileName.exists() || !fileArray.isEmpty()) {
         if (!metaData.isEmpty()) {
             if ( QMessageBox::question(nullptr, tr("File Already Open"), tr("Add data to existing dataset?")) == QMessageBox::No) {
                 seriesData.clear();
